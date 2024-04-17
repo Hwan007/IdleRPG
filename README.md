@@ -1,0 +1,2 @@
+# IdleRPG
+IdleRPG Scripts only.
