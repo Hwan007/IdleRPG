@@ -47,14 +47,10 @@ public class UIAwakenBar : UIBase
         {
             if (upgradeInfo.CheckUpgradeCondition())
             {
-                // TODO 글씨 색 회색
-                // upgradeBtn.interactable = false;
                 costText.color = Color.white;
             }
             else
             {
-                // TODO 글씨 색 흰색 
-                // upgradeBtn.interactable = true;
                 costText.color = Color.red;
             }
         }
@@ -73,15 +69,13 @@ public class UIAwakenBar : UIBase
 
     private void UpgradeBtn(EStatusType type)
     {
-        // TODO currency manager를 통해서 돈 빼기!
-
         if (TryUpgrade(type))
         {
             UpdateUI();
         }
         else
         {
-            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("각성석", Color.blue)+"이 부족합니다.");
+            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("", Color.blue)+".");
         }
     }
 
@@ -111,11 +105,6 @@ public class UIAwakenBar : UIBase
             totalUpgrade.text = $"(+{(upgradeInfo.upgradePerLevelFloat * upgradeInfo.level * 100):N0}%)";
 
         costText.text = upgradeInfo.cost.ChangeToShort();
-        //
-        // if (upgradeInfo.CheckUpgradeCondition())
-        //     upgradeBtn.interactable = false;
-        // else
-        //     upgradeBtn.interactable = true;
     }
 
     private void InitializeUI()

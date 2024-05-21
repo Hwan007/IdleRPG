@@ -84,7 +84,7 @@ public class UISummonListElement : UIBase
         if (EquipmentManager.instance.images.TryGetValue(item.equipName, out Sprite sprite))
             image.sprite = sprite;
 
-        rarity.text = $"{Strings.rareKor[(int)item.rarity]} {item.level}";
+        rarity.text = $"{Strings.rareKor[(int)item.rarity]} {item.rarityLevel}";
 
         // StartEffect();
         // StartEffect(item.eRarity);

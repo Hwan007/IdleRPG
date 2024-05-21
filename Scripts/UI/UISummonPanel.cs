@@ -15,7 +15,7 @@ public class UISummonPanel : UIPanel
     private int summonAmount;
     public bool IsEndShowSummon => summonList.isEnd;
 
-    [Header("무기 관련 UI")] 
+    [Header("무기 관??UI")] 
     [SerializeField] private Button weaponSummonBtn;
     [SerializeField] private Button weaponAdSummonBtn;
     [SerializeField] private Button seeWeaponSummonPercent;
@@ -33,7 +33,7 @@ public class UISummonPanel : UIPanel
     [SerializeField] private Button weaponSummonReward;
     [SerializeField] private GameObject weaponRewardEffect;
 
-    [Header("방어구 관련 UI")]
+    [Header("방어�?관??UI")]
     [SerializeField] private Button armorSummonBtn;
     [SerializeField] private Button armorAdSummonBtn;
     [SerializeField] private Button seeArmorSummonPercent;
@@ -51,7 +51,7 @@ public class UISummonPanel : UIPanel
     [SerializeField] private Button armorSummonReward;
     [SerializeField] private GameObject armorRewardEffect;
     
-    [Header("스킬 관련 UI")]
+    [Header("?�킬 관??UI")]
     [SerializeField] private Button skillSummonBtn;
     [SerializeField] private Button skillAdSummonBtn;
     [SerializeField] private Button seeSkillSummonPercent;
@@ -65,7 +65,7 @@ public class UISummonPanel : UIPanel
     [SerializeField] private Button skillSummonReward;
     [SerializeField] private GameObject skillRewardEffect;
     
-    [Header("소환 리스트 UI")]
+    [Header("?�환 리스??UI")]
     [SerializeField] private UISummonList summonList;
 
     [SerializeField] private Transform questGuide;
@@ -134,19 +134,19 @@ public class UISummonPanel : UIPanel
             });
         }
 
-        // 무기 관련 버튼 초기화
+        // 무기 관??버튼 초기??
         weaponSummonBtn.onClick.AddListener(() => OnSummonEquipment(EEquipmentType.Weapon, summonAmount));
         // weaponAdSummonBtn.onClick.AddListener(() => OnSummonEquipment(EEquipmentType.Weapon, summonAmount));
         seeWeaponSummonPercent.onClick.AddListener(() => OnSummonPercentage(EEquipmentType.Weapon));
         weaponSummonReward.onClick.AddListener(() => TryGetSummonReward(EEquipmentType.Weapon, SummonManager.instance.WeaponSummonLevel) );
         
-        // 방어구 관련 버튼 초기화
+        // 방어�?관??버튼 초기??
         armorSummonBtn.onClick.AddListener(() => OnSummonEquipment(EEquipmentType.Armor, summonAmount));
         // armorAdSummonBtn.onClick.AddListener(() => OnSummonEquipment(EEquipmentType.Armor, summonAmount));
         seeArmorSummonPercent.onClick.AddListener(() => OnSummonPercentage(EEquipmentType.Armor));
         armorSummonReward.onClick.AddListener(() => TryGetSummonReward(EEquipmentType.Armor, SummonManager.instance.ArmorSummonLevel));
         
-        // 스킬 관련 버튼 초기화
+        // ?�킬 관??버튼 초기??
         skillSummonBtn.onClick.AddListener(() => OnSummonSkill(summonAmount));
         // skillAdSummonBtn.onClick.AddListener(() => OnSummonSkill(summonAmount));
         seeSkillSummonPercent.onClick.AddListener(() => OnSummonPercentage(EEquipmentType.Skill));
@@ -159,7 +159,7 @@ public class UISummonPanel : UIPanel
         {
             // TODO Show reward panel
             UIManager.instance.TryGetUI<UIRewardPanel>().ShowUI(reward.type, reward.amount);
-            // TODO 강조 표시 비활성화
+            // TODO 강조 ?�시 비활?�화
             switch (type)
             {
                 case EEquipmentType.Weapon:
@@ -274,7 +274,7 @@ public class UISummonPanel : UIPanel
         }
         else
         {
-            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("재화", Color.magenta)+"가 부족합니다.");
+            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("?�화", Color.magenta)+"가 부족합?�다.");
         }
         // switch (type)
         // {
@@ -291,7 +291,7 @@ public class UISummonPanel : UIPanel
         //         }
         //         else
         //         {
-        //             PopMessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("재화가 부족합니다.", Color.red));
+        //             PopMessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("?�화가 부족합?�다.", Color.red));
         //         }
         //         break;
         //     case EEquipmentType.Armor:
@@ -301,7 +301,7 @@ public class UISummonPanel : UIPanel
         //         }
         //         else
         //         {
-        //             PopMessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("재화가 부족합니다.", Color.red));
+        //             PopMessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("?�화가 부족합?�다.", Color.red));
         //         }
         //         break;
         //     default:
@@ -328,7 +328,7 @@ public class UISummonPanel : UIPanel
         }
         else
         {
-            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("재화", Color.magenta)+"가 부족합니다.");
+            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("?�화", Color.magenta)+"가 부족합?�다.");
         }
         // if (SummonManager.instance.SummonSkills(amount, out List<BaseSkillData> skillList))
             // summonList.ShowUI(EEquipmentType.Skill, skillList, false);

@@ -10,8 +10,7 @@ using UnityEngine.UI;
 using Utils;
 using Random = UnityEngine.Random;
 
-public class UISummonList : UIPanel
-{
+public class UISummonList : UIPanel {
     [SerializeField] private TMP_Text summonLevel;
     [SerializeField] private TMP_Text summonType;
     [SerializeField] private TMP_Text summonCurrency;
@@ -40,46 +39,37 @@ public class UISummonList : UIPanel
     private EEquipmentType type;
     private ECurrencyType currencyType;
 
-    protected override void InitializeBtns()
-    {
+    protected override void InitializeBtns() {
         base.InitializeBtns();
 
-        summon.onClick.AddListener(() =>
-        {
-            if (SummonManager.instance.CalculateCost(type, amount, out int costDia, out int costTicket))
-            {
+        summon.onClick.AddListener(() => {
+            if (SummonManager.instance.CalculateCost(type, amount, out int costDia, out int costTicket)) {
                 ClearUI();
                 SetForStartSummon();
-                switch (type)
-                {
+                switch (type) {
                     case EEquipmentType.Weapon:
-                    case EEquipmentType.Armor:
-                    {
-                        int cost;
-                        ECurrencyType costType;
-                        if (costTicket > 0)
-                        {
-                            cost = costTicket;
-                            costType = type == EEquipmentType.Weapon ? ECurrencyType.WeaponSummonTicket : ECurrencyType.ArmorSummonTicket;
+                    case EEquipmentType.Armor: {
+                            int cost;
+                            ECurrencyType costType;
+                            if (costTicket > 0) {
+                                cost = costTicket;
+                                costType = type == EEquipmentType.Weapon ? ECurrencyType.WeaponSummonTicket : ECurrencyType.ArmorSummonTicket;
+                            }
+                            else {
+                                cost = costDia;
+                                costType = ECurrencyType.Dia;
+                            }
+                            SummonManager.instance.StartSummonItems(type, amount, costType, cost);
+                            break;
                         }
-                        else
-                        {
-                            cost = costDia;
-                            costType = ECurrencyType.Dia;
+                    case EEquipmentType.Skill: {
+                            SummonManager.instance.StartSummonSkills(amount, costDia);
+                            break;
                         }
-                        SummonManager.instance.StartSummonItems(type, amount, costType, cost);
-                        break;
-                    }
-                    case EEquipmentType.Skill:
-                    {
-                        SummonManager.instance.StartSummonSkills(amount, costDia);
-                        break;
-                    }
                 }
             }
-            else
-            {
-                MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("ìž¬í™”", Color.red) + "ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤.");
+            else {
+                MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("º¸¼®", Color.red) + "ÀÌ ºÎÁ·ÇÕ´Ï´Ù.");
             }
         });
         autoSummon.onValueChanged.AddListener((onoff) => isAuto = onoff);
@@ -87,8 +77,7 @@ public class UISummonList : UIPanel
         skipBackground.onClick.AddListener(() => { isSkip = true; });
     }
 
-    public override UIBase InitUI(UIBase parent)
-    {
+    public override UIBase InitUI(UIBase parent) {
         base.InitUI(parent);
 
         itemPool = EasyUIPooling.MakePool(itemPrefab, itemsRoot,
@@ -99,8 +88,7 @@ public class UISummonList : UIPanel
         return this;
     }
 
-    public void ShowUI(EEquipmentType type, List<SummonItem> items, bool isFast, ECurrencyType currencyType)
-    {
+    public void ShowUI(EEquipmentType type, List<SummonItem> items, bool isFast, ECurrencyType currencyType) {
         this.type = type;
         amount = items.Count;
         this.isFast = isFast;
@@ -118,14 +106,12 @@ public class UISummonList : UIPanel
         StartCoroutine(ShowSummonEffect(items, this.isFast));
     }
 
-    private void SetCurrency(ECurrencyType moneyType, string amount)
-    {
+    private void SetCurrency(ECurrencyType moneyType, string amount) {
         if (moneyType == ECurrencyType.Dia)
             summonCurrency.text = CurrencyManager.instance.GetCurrencyStr(ECurrencyType.Dia);
     }
 
-    public void ShowUI(EEquipmentType type, List<SummonSkill> skills, bool isFast, ECurrencyType currencyType)
-    {
+    public void ShowUI(EEquipmentType type, List<SummonSkill> skills, bool isFast, ECurrencyType currencyType) {
         this.type = type;
         amount = skills.Count;
         this.isFast = isFast;
@@ -138,19 +124,17 @@ public class UISummonList : UIPanel
         SetForStartSummon();
         SetTopBar(type);
         summonCurrency.text = CurrencyManager.instance.GetCurrencyStr(ECurrencyType.Dia);
-        
+
         CurrencyManager.instance.onCurrencyChanged += SetCurrency;
         StartCoroutine(ShowSummonEffect(skills, this.isFast));
     }
 
-    public void SetTopBar(EEquipmentType type)
-    {
-        switch (type)
-        {
+    public void SetTopBar(EEquipmentType type) {
+        switch (type) {
             case EEquipmentType.Weapon:
                 summonLevel.gameObject.SetActive(true);
                 summonLevel.text = $"Lv.{SummonManager.instance.WeaponSummonLevel}";
-                summonType.text = "ë¬´ê¸° ì†Œí™˜";
+                summonType.text = "¹«±â ¼ÒÈ¯";
                 summonCounter.text =
                     $"{SummonManager.instance.WeaponSummonCount} / {SummonManager.instance.SummonCountPerLevel[SummonManager.instance.WeaponSummonLevel]}";
                 summonCounterSlider.maxValue =
@@ -160,7 +144,7 @@ public class UISummonList : UIPanel
             case EEquipmentType.Armor:
                 summonLevel.gameObject.SetActive(true);
                 summonLevel.text = $"Lv.{SummonManager.instance.ArmorSummonLevel}";
-                summonType.text = "ê°‘ì˜· ì†Œí™˜";
+                summonType.text = "¹æ¾î±¸ ¼ÒÈ¯";
                 summonCounter.text =
                     $"{SummonManager.instance.ArmorSummonCount} / {SummonManager.instance.SummonCountPerLevel[SummonManager.instance.ArmorSummonLevel]}";
                 summonCounterSlider.maxValue =
@@ -169,7 +153,7 @@ public class UISummonList : UIPanel
                 break;
             case EEquipmentType.Skill:
                 summonLevel.gameObject.SetActive(false);
-                summonType.text = "ìŠ¤í‚¬ ì†Œí™˜";
+                summonType.text = "½ºÅ³ ¼ÒÈ¯";
                 summonCounter.text = $"{SummonManager.instance.SkillSummonCount} / 400";
                 summonCounterSlider.maxValue = 400;
                 summonCounterSlider.value = SummonManager.instance.SkillSummonCount;
@@ -181,8 +165,7 @@ public class UISummonList : UIPanel
         }
     }
 
-    private void SetForStartSummon()
-    {
+    private void SetForStartSummon() {
         summon.interactable = false;
         foreach (var btn in exitBtns)
             btn.interactable = false;
@@ -191,27 +174,23 @@ public class UISummonList : UIPanel
         isSkip = false;
     }
 
-    public void SetForEndSummon()
-    {
+    public void SetForEndSummon() {
         SetTopBar(type);
         summon.interactable = true;
         foreach (var btn in exitBtns)
             btn.interactable = true;
     }
-    
-    private IEnumerator ShowSummonEffect(List<SummonSkill> skills, bool isFast)
-    {
+
+    private IEnumerator ShowSummonEffect(List<SummonSkill> skills, bool isFast) {
         int i = 0;
         float waitTime = 0.02f;
         if (isFast)
             isSkip = true;
         float passedTime = .0f;
 
-        while (skills.Count > i && !isSkip)
-        {
+        while (skills.Count > i && !isSkip) {
             passedTime += Time.deltaTime;
-            if (passedTime < waitTime)
-            {
+            if (passedTime < waitTime) {
                 yield return null;
                 continue;
             }
@@ -225,13 +204,12 @@ public class UISummonList : UIPanel
                 yield return new WaitForSeconds(0.7f);
             else
                 yield return null;
-            
+
             ++i;
             passedTime = .0f;
         }
 
-        while (skills.Count > i)
-        {
+        while (skills.Count > i) {
             var obj = itemPool.Get();
             obj.ShowUI(this, skills[i].skill);
             skills[i].isUpgrade += obj.Shake;
@@ -244,19 +222,16 @@ public class UISummonList : UIPanel
         isEnd = true;
     }
 
-    private IEnumerator ShowSummonEffect(List<SummonItem> items, bool isFast)
-    {
+    private IEnumerator ShowSummonEffect(List<SummonItem> items, bool isFast) {
         int i = 0;
         float waitTime = 0.02f;
         if (isFast)
             isSkip = true;
         float passedTime = .0f;
 
-        while (items.Count > i && !isSkip)
-        {
+        while (items.Count > i && !isSkip) {
             passedTime += Time.deltaTime;
-            if (passedTime < waitTime)
-            {
+            if (passedTime < waitTime) {
                 yield return null;
                 continue;
             }
@@ -270,14 +245,13 @@ public class UISummonList : UIPanel
                 yield return new WaitForSeconds(0.7f);
             else
                 yield return null;
-            
+
             ++i;
             passedTime = .0f;
             yield return null;
         }
 
-        while (items.Count > i)
-        {
+        while (items.Count > i) {
             var obj = itemPool.Get();
             obj.ShowUI(this, items[i].item);
             items[i].isUpgrade += obj.Shake;
@@ -290,24 +264,19 @@ public class UISummonList : UIPanel
         isEnd = true;
     }
 
-    public override void CloseUI()
-    {
+    public override void CloseUI() {
         CurrencyManager.instance.onCurrencyChanged -= SetCurrency;
-        if (isEnd)
-        {
+        if (isEnd) {
             base.CloseUI();
             ClearUI();
         }
-        else
-        {
+        else {
             isSkip = true;
         }
     }
 
-    public void ClearUI()
-    {
-        while (itemPool.UsedCount > 0)
-        {
+    public void ClearUI() {
+        while (itemPool.UsedCount > 0) {
             itemPool.UsedList.First.Value.CloseUI();
         }
     }

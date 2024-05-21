@@ -5,8 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Utils;
 
-public class UIEnhancePopup : UIPanel
-{
+public class UIEnhancePopup : UIPanel {
     [SerializeField] private HoldCheckerButton enhanceBtn;
     private Equipment equipment;
 
@@ -16,9 +15,9 @@ public class UIEnhancePopup : UIPanel
     // image
     [SerializeField] private Image itemImage;
 
-    // 강화 레벨
+    // 강화 ?�벨
     [SerializeField] private TMP_Text titleText;
-    
+
     [SerializeField] private TMP_Text rarityText;
 
     // cost
@@ -35,8 +34,7 @@ public class UIEnhancePopup : UIPanel
 
     [SerializeField] private Transform questGuide;
 
-    public void ShowUI(Equipment item)
-    {
+    public void ShowUI<T>(T item) where T : Equipment {
         base.ShowUI();
 
         costImage.sprite = CurrencyManager.instance.GetIcon(ECurrencyType.EnhanceStone);
@@ -49,49 +47,52 @@ public class UIEnhancePopup : UIPanel
         if (EquipmentManager.instance.images.TryGetValue(item.equipName, out Sprite sprite))
             itemImage.sprite = sprite;
 
-        rarityText.text = $"{Strings.rareKor[(int)item.rarity]} {item.level}";
+        rarityText.text = $"{Strings.rareKor[(int)item.rarity]} {item.rarityLevel}";
 
-        titleText.text = $"장비 강화 ( {item.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
+        switch (item) {
+            case WeaponInfo weaponInfo:
+                titleText.text = $" ( {weaponInfo.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
+                break;
+            case ArmorInfo armorInfo:
+                titleText.text = $" ( {armorInfo.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
+                break;
+            default:
+                titleText.text = "";
+                break;
+        }
 
         UpdateCostAndCurrency();
     }
 
-    protected override void InitializeBtns()
-    {
+    protected override void InitializeBtns() {
         base.InitializeBtns();
 
         enhanceBtn.onClick.AddListener(TryEnhanceItem);
         enhanceBtn.onExit.AddListener(SaveEnhanceItem);
     }
 
-    private void SaveEnhanceItem()
-    {
+    private void SaveEnhanceItem() {
         EquipmentManager.instance.SaveEnhanceItem(equipment);
         CurrencyManager.instance.SaveCurrencies();
     }
 
-    private void TryEnhanceItem()
-    {
+    private void TryEnhanceItem() {
         var ret = EquipmentManager.instance.CanEnhance(equipment);
-        if (ret == 1)
-        {
+        if (ret == 1) {
             EquipmentManager.instance.Enhance(equipment);
             UpdateCostAndCurrency();
         }
-        else if (ret == 0)
-        {
-            MessageUIManager.instance.ShowCenterMessage("강화석이 부족합니다.");
+        else if (ret == 0) {
+            MessageUIManager.instance.ShowCenterMessage("");
         }
-        else if (ret == -1)
-        {
-            MessageUIManager.instance.ShowCenterMessage("최대 레벨입니다.");
+        else if (ret == -1) {
+            MessageUIManager.instance.ShowCenterMessage("");
         }
         Debug.Assert(ret is >= -1 and <= 1, "Not Defined");
         // failed enhance item
     }
 
-    private void UpdateCostAndCurrency()
-    {
+    private void UpdateCostAndCurrency() {
         var cost = equipment.GetEnhanceStone();
         costText.text = cost.ChangeToShort();
 
@@ -99,44 +100,42 @@ public class UIEnhancePopup : UIPanel
         currencyText.text = currency;
 
         StringBuilder sb = new StringBuilder();
-        
-        switch (equipment.type)
-        {
-            case EEquipmentType.Weapon:
-                sb.Clear().Append("보유 효과 : ").Append("피해량 +").Append(equipment.ownedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
-                    .Append(CustomText.SetColor((equipment.ownedEffect + equipment.baseOwnedEffect).ChangeToShort(),
-                        EColorType.Green)).Append(") 증가");
+
+        switch (equipment) {
+            case WeaponInfo weaponInfo:
+                sb.Clear().Append(" : ").Append("").Append(weaponInfo.ownedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
+                    .Append(CustomText.SetColor((weaponInfo.ownedEffect + weaponInfo.baseOwnedEffect).ChangeToShort(),
+                        EColorType.Green)).Append(")");
                 ownedEffectText.text = sb.ToString();
-                
-                sb.Clear().Append("장착 효과 : ").Append("피해량 +").Append(equipment.equippedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
-                    .Append(CustomText.SetColor((equipment.equippedEffect + equipment.baseEquippedEffect).ChangeToShort(),
-                        EColorType.Green)).Append(") 증가");
+
+                sb.Clear().Append(" : ").Append("").Append(weaponInfo.equippedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
+                    .Append(CustomText.SetColor((weaponInfo.equippedEffect + weaponInfo.baseEquippedEffect).ChangeToShort(),
+                        EColorType.Green)).Append(")");
                 equipedEffectText.text = sb.ToString();
+                titleText.text = $" ( {weaponInfo.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
                 break;
-            case EEquipmentType.Armor:
-                sb.Clear().Append("보유 효과 : ").Append("체력 +").Append(equipment.ownedEffect).Append(CustomText.SetColor("% (\u25b2", EColorType.Green))
-                    .Append(CustomText.SetColor((equipment.ownedEffect + equipment.baseOwnedEffect).ChangeToShort(),
-                        EColorType.Green)).Append(") 증가");
+            case ArmorInfo armorInfo:
+                sb.Clear().Append(" : ").Append("").Append(armorInfo.ownedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
+                    .Append(CustomText.SetColor((armorInfo.ownedEffect + armorInfo.baseOwnedEffect).ChangeToShort(),
+                        EColorType.Green)).Append(")");
                 ownedEffectText.text = sb.ToString();
-                
-                sb.Clear().Append("장착 효과 : ").Append("체력 +").Append(equipment.equippedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
-                    .Append(CustomText.SetColor((equipment.equippedEffect + equipment.baseEquippedEffect).ChangeToShort(),
-                        EColorType.Green)).Append(") 증가");
+
+                sb.Clear().Append(" : ").Append(" +").Append(armorInfo.equippedEffect).Append(CustomText.SetColor(" (\u25b2", EColorType.Green))
+                    .Append(CustomText.SetColor((armorInfo.equippedEffect + armorInfo.baseEquippedEffect).ChangeToShort(),
+                        EColorType.Green)).Append(")");
                 equipedEffectText.text = sb.ToString();
+                titleText.text = $" ( {armorInfo.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
+                break;
+            default:
+                ownedEffectText.text = "";
+                equipedEffectText.text = "";
+                titleText.text = "";
                 break;
         }
-        
-        // ownedEffectText.text = $"보유 효과 : {(equipment.type == EEquipmentType.Weapon ? "피해량" : "체력")} {equipment.ownedEffect}%" + CustomText.SetColor($"=>({equipment.ownedEffect + equipment.baseOwnedEffect}%)", CustomText.CustomColor(30, 255, 30)) + " 증가";
-        
-        // equipedEffectText.text = $"장착 효과 : {(equipment.type == EEquipmentType.Weapon ? "피해량" : "체력")} {equipment.equippedEffect}%" + CustomText.SetColor($"=>({equipment.equippedEffect + equipment.baseEquippedEffect}%)", CustomText.CustomColor(30, 255, 30)) + " 증가";
-        
-        titleText.text = $"장비 강화 ( {equipment.enhancementLevel} / {EquipmentManager.instance.EnhancementMaxLevel} )";
     }
 
-    public override void ShowQuestRoot(EAchievementType type)
-    {
-        switch (type)
-        {
+    public override void ShowQuestRoot(EAchievementType type) {
+        switch (type) {
             case EAchievementType.EquipEnhanceCount:
                 questGuide.position = enhanceBtn.transform.position;
                 questGuide.gameObject.SetActive(true);

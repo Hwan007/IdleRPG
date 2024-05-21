@@ -8,8 +8,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Utils;
 
-public class UIDungeonElementPopup : UIBase
-{
+public class UIDungeonElementPopup : UIBase {
     public Button[] exitBtns;
     public ENormalRewardType rewardType;
     public TMP_Text ownedReward;
@@ -31,20 +30,17 @@ public class UIDungeonElementPopup : UIBase
     [SerializeField] private RectTransform questGuide;
     [SerializeField] private RectTransform enterQuestRoot;
 
-    protected void Awake()
-    {
+    protected void Awake() {
         InitializeBtns();
     }
 
-    public override void CloseUI()
-    {
+    public override void CloseUI() {
         base.CloseUI();
-        
+
         gameObject.SetActive(false);
     }
 
-    public void ShowUI(UIDungeonPanel _parent, DungeonData _data)
-    {
+    public void ShowUI(UIDungeonPanel _parent, DungeonData _data) {
         base.ShowUI();
         this.parent = _parent;
         this.data = _data;
@@ -63,47 +59,38 @@ public class UIDungeonElementPopup : UIBase
         invitationCount.text = $"{CurrencyManager.instance.GetCurrencyStr(data.invitationType)}/1";
     }
 
-    public void InitializeBtns()
-    {
+    public void InitializeBtns() {
         foreach (var btn in exitBtns)
             btn.onClick.AddListener(CloseUI);
-        
+
         enterBtn.onClick.AddListener(TryEnterDungeon);
     }
 
-    private void TryEnterDungeon()
-    {
-        if (CurrencyManager.instance.GetCurrency(data.invitationType) > 0)
-        {
+    private void TryEnterDungeon() {
+        if (CurrencyManager.instance.GetCurrency(data.invitationType) > 0) {
             CloseUI();
             parent.CloseUI();
             StageManager.instance.InitToDungeon(data);
             UIManager.instance.TryGetUI<UIBottomMenuCtrl>().ActivateDungeonBtn(true);
         }
-        else
-        {
-            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("ì…ì¥ê¶Œ", Color.red)+"ì´ ë¶€ì¡±í•©ë‹ˆë‹¤.");
+        else {
+            MessageUIManager.instance.ShowCenterMessage(CustomText.SetColor("ÀÔÀå±Ç", Color.red) + "ÀÌ ºÎÁ·ÇÕ´Ï´Ù.");
         }
     }
 
-    public override void ShowQuestRoot(EAchievementType type)
-    {
-        switch (type)
-        {
+    public override void ShowQuestRoot(EAchievementType type) {
+        switch (type) {
             case EAchievementType.GoldDungeonLevel:
             case EAchievementType.AwakenDungeonLevel:
                 // case EnhanceDungeonLevel
-                if (data.dungeonType == EDungeonType.Gold)
-                {
+                if (data.dungeonType == EDungeonType.Gold) {
                     questGuide.SetParent(enterQuestRoot);
                 }
-                else if (data.dungeonType == EDungeonType.Awaken)
-                {
+                else if (data.dungeonType == EDungeonType.Awaken) {
                     questGuide.SetParent(enterQuestRoot);
                 }
-                else if (data.dungeonType == EDungeonType.Enhance)
-                {
-                    // TODO ê´€ë ¨ í€˜ìŠ¤íŠ¸ê°€ ìˆë‹¤ë©´ ì‘ì—…ì´ í•„ìš”í•¨.
+                else if (data.dungeonType == EDungeonType.Enhance) {
+                    // TODO ê´€???˜ìŠ¤?¸ê? ?ˆë‹¤ë©??‘ì—…???„ìš”??
                     return;
                 }
                 questGuide.localPosition = Vector3.zero;
