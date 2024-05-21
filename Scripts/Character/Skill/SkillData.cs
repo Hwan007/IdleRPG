@@ -6,23 +6,21 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [Serializable]
-public class BaseSkillData
-{
-    [Header("필수")] public string skillName;
+public class BaseSkillData {
+    [Header("")] public string skillName;
     public ERarity rarity;
     public string description;
     public string[] descriptions { get; protected set; }
     public ESkillType skillType;
     public int iconIndex;
 
-    [Header("확인용")] public bool isOwned;
+    [Header("")] public bool isOwned;
     public int quantity;
     public int levelFrom0;
 
     public event Action<int> onLevelUp;
 
-    public BaseSkillData(string _skillName, ERarity _rarity, string _description, ESkillType _skillType)
-    {
+    public BaseSkillData(string _skillName, ERarity _rarity, string _description, ESkillType _skillType) {
         skillName = _skillName;
         rarity = _rarity;
         description = _description;
@@ -32,10 +30,8 @@ public class BaseSkillData
         levelFrom0 = 0;
     }
 
-    public virtual void Save(ESkillDataType type)
-    {
-        switch (type)
-        {
+    public virtual void Save(ESkillDataType type) {
+        switch (type) {
             case ESkillDataType.Quantity:
                 DataManager.Instance.Save<int>(skillName + nameof(quantity), quantity);
                 break;
@@ -45,28 +41,23 @@ public class BaseSkillData
         }
     }
 
-    public virtual void Load()
-    {
+    public virtual void Load() {
         descriptions = description.Split('n', 'm');
         quantity = DataManager.Instance.Load(skillName + nameof(quantity), 0);
         isOwned = quantity > 0;
-        if (isOwned)
-        {
+        if (isOwned) {
             levelFrom0 = DataManager.Instance.Load(skillName + nameof(levelFrom0), 0);
         }
         else
             levelFrom0 = 0;
     }
 
-    public virtual string GetDescriptionVariable(int index)
-    {
+    public virtual string GetDescriptionVariable(int index) {
         return "0";
     }
 
-    public virtual bool TryLevelUp()
-    {
-        if (IsCanLevelUp())
-        {
+    public virtual bool TryLevelUp() {
+        if (IsCanLevelUp()) {
             quantity -= 4 * (levelFrom0 + 1);
             ++levelFrom0;
             onLevelUp?.Invoke(levelFrom0);
@@ -76,64 +67,54 @@ public class BaseSkillData
         return false;
     }
 
-    public bool IsCanLevelUp()
-    {
+    public bool IsCanLevelUp() {
         return quantity > 4 * (levelFrom0 + 1);
     }
 
-    public int QuantityToLevelUp()
-    {
+    public int QuantityToLevelUp() {
         return 4 * (levelFrom0 + 1);
     }
 }
 
 [Serializable]
-public abstract class AnimSkillData : BaseSkillData
-{
-    [Header("시전")] public float coolTime;
+public abstract class AnimSkillData : BaseSkillData {
+    [Header("")] public float coolTime;
     public int ManaConsume { get; protected set; }
     [SerializeField] protected int baseManaConsume;
     public float skillFullTime;
 
-    [Header("애니메이션")] public EFsmState animType;
+    [Header("")] public EFsmState animType;
     public string animParameter;
     public float skillAnimTime;
-    
+
     public bool isEquipped { get; set; }
     public int equipIndex;
 
     public AnimSkillData(string _skillName, ERarity _rarity, string _description, ESkillType _skillType,
-        float _cooltime, int _manaconsume, float _skillFullTime) : base(_skillName, _rarity, _description, _skillType)
-    {
+        float _cooltime, int _manaconsume, float _skillFullTime) : base(_skillName, _rarity, _description, _skillType) {
         coolTime = _cooltime;
         baseManaConsume = _manaconsume;
         ManaConsume = _manaconsume * (levelFrom0 + 1);
         skillFullTime = _skillFullTime;
     }
 
-    public override void Save(ESkillDataType type)
-    {
-        if (type == ESkillDataType.EquipIndex)
-        {
+    public override void Save(ESkillDataType type) {
+        if (type == ESkillDataType.EquipIndex) {
             DataManager.Instance.Save<int>(skillName + nameof(equipIndex), equipIndex);
         }
-        else
-        {
+        else {
             base.Save(type);
         }
     }
 
-    public override void Load()
-    {
+    public override void Load() {
         base.Load();
         ManaConsume = baseManaConsume * (levelFrom0 + 1);
 
-        if (isOwned)
-        {
+        if (isOwned) {
             equipIndex = DataManager.Instance.Load(skillName + nameof(equipIndex), -1);
 
-            if (equipIndex != -1)
-            {
+            if (equipIndex != -1) {
                 // TODO : not good
                 PlayerManager.instance.EquipSkill(equipIndex, this);
                 UIManager.instance.TryGetUI<UISkillSlot>().ShowUI(equipIndex, this);
@@ -141,17 +122,14 @@ public abstract class AnimSkillData : BaseSkillData
         }
     }
 
-    public void SaveEquip(bool isEquip, int index = -1)
-    {
+    public void SaveEquip(bool isEquip, int index = -1) {
         isEquipped = isEquip;
         equipIndex = index;
         Save(ESkillDataType.EquipIndex);
     }
 
-    public override bool TryLevelUp()
-    {
-        if (base.TryLevelUp())
-        {
+    public override bool TryLevelUp() {
+        if (base.TryLevelUp()) {
             ManaConsume = baseManaConsume * (levelFrom0 + 1);
             return true;
         }
@@ -164,8 +142,7 @@ public abstract class AnimSkillData : BaseSkillData
 }
 
 [Serializable]
-public class ActiveSkillData : AnimSkillData
-{
+public class ActiveSkillData : AnimSkillData {
     public ESkillAttackType attackType { get; set; }
     public bool isFollowing { get; set; } = false;
     public bool isContinuous { get; set; } = false;
@@ -181,8 +158,7 @@ public class ActiveSkillData : AnimSkillData
     public ActiveSkillData(string _skillName, ERarity _rarity, string _description,
         ESkillType _skillType, float _cooltime, int _manaconsume, float _skillFullTime,
         int _maxAttackCount, int multiplier, float _attackDistance, float _tickUnitTime)
-        : base(_skillName, _rarity, _description, _skillType, _cooltime, _manaconsume, _skillFullTime)
-    {
+        : base(_skillName, _rarity, _description, _skillType, _cooltime, _manaconsume, _skillFullTime) {
         maxAttackCount = _maxAttackCount;
         baseMultiplier = multiplier;
         Multiplier = baseMultiplier * (1 + levelFrom0);
@@ -190,8 +166,7 @@ public class ActiveSkillData : AnimSkillData
         tickUnitTime = _tickUnitTime;
     }
 
-    public void SetInfo(ActiveSkillFixedInfo info)
-    {
+    public void SetInfo(ActiveSkillFixedInfo info) {
         animType = info.animType;
         animParameter = info.animParameter;
         skillAnimTime = info.skillAnimTime;
@@ -204,8 +179,7 @@ public class ActiveSkillData : AnimSkillData
         colliderInfo = info.attackColliderInfos;
     }
 
-    public override string GetDescriptionVariable(int index)
-    {
+    public override string GetDescriptionVariable(int index) {
         if (index == 0)
             return Multiplier.ToString();
         else if (index == 1)
@@ -213,16 +187,13 @@ public class ActiveSkillData : AnimSkillData
         return "";
     }
 
-    public override void Load()
-    {
+    public override void Load() {
         base.Load();
         Multiplier = baseMultiplier * (levelFrom0 + 1);
     }
 
-    public override bool TryLevelUp()
-    {
-        if (base.TryLevelUp())
-        {
+    public override bool TryLevelUp() {
+        if (base.TryLevelUp()) {
             Multiplier = baseMultiplier * (levelFrom0 + 1);
             // TODO : not good
             SkillManager.instance.GetSkillSystem(skillName).InitSkillSystem(PlayerManager.instance.player, this);
@@ -232,10 +203,8 @@ public class ActiveSkillData : AnimSkillData
         return false;
     }
 
-    public override bool TryGetShakeTime(int index, out float time)
-    {
-        if (index < colliderInfo.Length)
-        {
+    public override bool TryGetShakeTime(int index, out float time) {
+        if (index < colliderInfo.Length) {
             time = colliderInfo[index].shakeTime;
             return true;
         }
@@ -244,10 +213,9 @@ public class ActiveSkillData : AnimSkillData
         return false;
     }
 
-    public override float[] GetShakeTimes()
-    {
+    public override float[] GetShakeTimes() {
         float[] ret = new float[colliderInfo.Length];
-        
+
         for (int i = 0; i < ret.Length; ++i)
             ret[i] = colliderInfo[i].shakeTime;
 
@@ -256,46 +224,39 @@ public class ActiveSkillData : AnimSkillData
 }
 
 [Serializable]
-public class PassiveSkillData : BaseSkillData
-{
-    [Header("Passive Status")] [SerializeField]
+public class PassiveSkillData : BaseSkillData {
+    [Header("Passive Status")]
+    [SerializeField]
     protected PassiveStatus baseStatus;
 
     public PassiveStatus status { get; protected set; }
 
     public PassiveSkillData(string skillName, ERarity rarity, string description, ESkillType skillType,
-        EStatusType type, int amount) : base(skillName, rarity, description, skillType)
-    {
+        EStatusType type, int amount) : base(skillName, rarity, description, skillType) {
         baseStatus = new PassiveStatus(type, amount);
         status = new PassiveStatus(baseStatus.target, baseStatus.buff * (1 + levelFrom0));
     }
 
-    public void SetInfo(PassiveSkillFixedInfo info)
-    {
+    public void SetInfo(PassiveSkillFixedInfo info) {
         iconIndex = info.iconIndex;
     }
 
-    public override string GetDescriptionVariable(int index)
-    {
+    public override string GetDescriptionVariable(int index) {
         return status.buff.ToString();
     }
 
-    public override void Load()
-    {
+    public override void Load() {
         base.Load();
         status = new PassiveStatus(baseStatus.target, baseStatus.buff * (1 + levelFrom0));
 
-        if (isOwned)
-        {
+        if (isOwned) {
             // TODO : not good
             PlayerManager.instance.AddPassiveToList(status);
         }
     }
 
-    public override bool TryLevelUp()
-    {
-        if (base.TryLevelUp())
-        {
+    public override bool TryLevelUp() {
+        if (base.TryLevelUp()) {
             // TODO : not good
             PlayerManager.instance.RemovePassiveToList(status);
             status = new PassiveStatus(baseStatus.target, baseStatus.buff * (1 + levelFrom0));
@@ -308,8 +269,7 @@ public class PassiveSkillData : BaseSkillData
 }
 
 [Serializable]
-public class BuffSkillData : AnimSkillData
-{
+public class BuffSkillData : AnimSkillData {
     public TempBuffStatus tempBuffStatus { get; protected set; }
 
     [Header("Buff Status")]
@@ -321,27 +281,23 @@ public class BuffSkillData : AnimSkillData
 
     public BuffSkillData(string _skillName, ERarity _rarity, string _description, ESkillType _skillType,
         float _cooltime, int _manaconsume, float _skillFullTime, TempBuffStatus _status)
-        : base(_skillName, _rarity, _description, _skillType, _cooltime, _manaconsume, _skillFullTime)
-    {
+        : base(_skillName, _rarity, _description, _skillType, _cooltime, _manaconsume, _skillFullTime) {
         baseBuffStatus = _status;
         tempBuffStatus = new TempBuffStatus(levelFrom0 + 1, baseBuffStatus);
     }
 
-    public void SetInfo(BuffSkillFixedInfo info)
-    {
+    public void SetInfo(BuffSkillFixedInfo info) {
         animType = info.animType;
         animParameter = info.animParameter;
         skillAnimTime = info.skillAnimTime;
         iconIndex = info.iconIndex;
     }
 
-    public override string GetDescriptionVariable(int index)
-    {
+    public override string GetDescriptionVariable(int index) {
         return buffDescription[index];
     }
 
-    public override void Load()
-    {
+    public override void Load() {
         base.Load();
         tempBuffStatus = new TempBuffStatus(levelFrom0 + 1, baseBuffStatus);
 
@@ -368,10 +324,8 @@ public class BuffSkillData : AnimSkillData
             buffDescription.Add(tempBuffStatus.skillDamageBuff.ToString());
     }
 
-    public override bool TryLevelUp()
-    {
-        if (base.TryLevelUp())
-        {
+    public override bool TryLevelUp() {
+        if (base.TryLevelUp()) {
             tempBuffStatus = new TempBuffStatus(levelFrom0 + 1, baseBuffStatus);
             return true;
         }
@@ -379,10 +333,8 @@ public class BuffSkillData : AnimSkillData
         return false;
     }
 
-    public override bool TryGetShakeTime(int index, out float time)
-    {
-        if (index < shakeTime.Length)
-        {
+    public override bool TryGetShakeTime(int index, out float time) {
+        if (index < shakeTime.Length) {
             time = shakeTime[index];
             return true;
         }
@@ -391,30 +343,26 @@ public class BuffSkillData : AnimSkillData
         return false;
     }
 
-    public override float[] GetShakeTimes()
-    {
+    public override float[] GetShakeTimes() {
         return shakeTime;
     }
 }
 
 [Serializable]
-public class SpecialSkillData : ActiveSkillData
-{
+public class SpecialSkillData : ActiveSkillData {
     [Header("Buff Status")] public TempBuffStatus tempBuffStatus;
 
     public SpecialSkillData(string _skillName, ERarity _rarity, string _description, ESkillType _skillType,
         float _cooltime, int _manaconsume, float _skillFullTime, int _maxAttackCount, int multiplier,
         float _attackDistance, float _tickUnitTime, TempBuffStatus buff) : base(_skillName, _rarity, _description,
         _skillType, _cooltime, _manaconsume, _skillFullTime, _maxAttackCount, multiplier, _attackDistance,
-        _tickUnitTime)
-    {
+        _tickUnitTime) {
         tempBuffStatus = buff;
     }
 }
 
 [Serializable]
-public class AttackColliderInfo
-{
+public class AttackColliderInfo {
     public ECalculatePositionType type;
     public float size;
     public int knockback;

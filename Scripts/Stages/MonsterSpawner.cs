@@ -6,8 +6,8 @@ using System.Threading;
 using Character.Monster;
 using Random = UnityEngine.Random;
 
-public class MonsterSpawner : MonoBehaviour
-{
+public class MonsterSpawner : MonoBehaviour {
+    #region ÇÊµå »ý·«
     private StageManager stageManager => StageManager.instance;
     private PlayerData player => PlayerManager.instance.player;
 
@@ -28,29 +28,22 @@ public class MonsterSpawner : MonoBehaviour
 
     private StageDataSO stageData;
     private DungeonData dungeonData;
-
-    private void Start()
-    {
-        // stageManager = StageManager.instance;
-        // player = PlayerManager.instance.player;
-
+    #endregion
+    private void Start() {
         stageManager.OnStateChange += SetStageStageStage;
     }
 
-    public void SetStageData(StageDataSO data)
-    {
+    public void SetStageData(StageDataSO data) {
         stageData = data;
         isOnClear = false;
     }
 
-    public void SetDungeonData(DungeonData data)
-    {
+    public void SetDungeonData(DungeonData data) {
         dungeonData = data;
         isOnClear = false;
     }
 
-    public void StartGoldDungeonGenerate()
-    {
+    public void StartGoldDungeonGenerate() {
         StopGenerating();
 
         while (monsterPool.Count > 0)
@@ -59,23 +52,10 @@ public class MonsterSpawner : MonoBehaviour
         generatingCoroutine = StartCoroutine(GoldDungeonGenerate());
     }
 
-    // public void StartAwakenDungeonGenerate()
-    // {
-    //     StopGenerating();
-    //
-    //     while (monsterPool.Count > 0)
-    //         Destroy(monsterPool.Dequeue().gameObject);
-    //
-    //     generatingCoroutine = StartCoroutine(AwakenDungeonGenerate());
-    // }
-
-    IEnumerator GoldDungeonGenerate()
-    {
+    IEnumerator GoldDungeonGenerate() {
         int count = 0;
-        while (!isOnClear)
-        {
-            while (count < dungeonData.stageSO.MaxSpawn)
-            {
+        while (!isOnClear) {
+            while (count < dungeonData.stageSO.MaxSpawn) {
                 InstantiateGoldMonster();
                 ++count;
                 yield return regenTime;
@@ -85,33 +65,14 @@ public class MonsterSpawner : MonoBehaviour
         }
     }
 
-    // IEnumerator AwakenDungeonGenerate()
-    // {
-    //     int count = 0;
-    //     while (!isOnClear)
-    //     {
-    //         while (count < dungeonData.stageSO.MaxSpawn)
-    //         {
-    //             InstantiateAwakenMonster();
-    //             ++count;
-    //             yield return regenTime;
-    //         }
-    //
-    //         yield return null;
-    //     }
-    // }
-
-    public MonsterData InstantiateAwakenBoss(DungeonData data)
-    {
+    public MonsterData InstantiateAwakenBoss(DungeonData data) {
         StopGenerating();
 
         Vector2 playerPos = player.transform.position;
-        // var bossSpawnPoint = new Vector2(0, 2);
         var bossSpawnPoint = data.stageSO.BossSpawnPosition;
 
         var monster = Instantiate(data.stageSO.BossMonsterPrefab);
 
-        // monster.ClearCallbacks();
         monster.controller.onDeathEnd += () => EnqueueMonster(monster);
         monster.transform.position = bossSpawnPoint;
         monster.InitMonster();
@@ -122,8 +83,7 @@ public class MonsterSpawner : MonoBehaviour
         return monster;
     }
 
-    public void StartInfiniteGenerating()
-    {
+    public void StartInfiniteGenerating() {
         StopGenerating();
 
         while (monsterPool.Count > 0)
@@ -132,13 +92,10 @@ public class MonsterSpawner : MonoBehaviour
         generatingCoroutine = StartCoroutine(GenerateInfiniteMonster());
     }
 
-    private IEnumerator GenerateInfiniteMonster()
-    {
+    private IEnumerator GenerateInfiniteMonster() {
         int count = 0;
-        while (!isOnClear)
-        {
-            if (monstersOnField.Count < spawnMaxCount)
-            {
+        while (!isOnClear) {
+            if (monstersOnField.Count < spawnMaxCount) {
                 InstantiateMonster();
                 ++count;
                 yield return regenTime;
@@ -148,16 +105,13 @@ public class MonsterSpawner : MonoBehaviour
         }
     }
 
-    public void StopGenerating()
-    {
-        if (generatingCoroutine == null) return;
+    public void StopGenerating() {
+        if (generatingCoroutine == null)
+            return;
         StopCoroutine(generatingCoroutine);
     }
 
-    public MonsterData InstantiateBoss()
-    {
-        StopGenerating();
-
+    public MonsterData InstantiateBoss() {
         Vector2 playerPos = player.transform.position;
         var bossSpawnPoint = stageData.BossSpawnPosition;
 
@@ -165,12 +119,10 @@ public class MonsterSpawner : MonoBehaviour
 
         var targetLevel = 140 * (stageData.StageSection - 1) + 20 * (stageManager.currentStage) + stageData.StageNumber;
         var targetReward = stageData.BossMonsterReward;
-        foreach (var reward in targetReward)
-        {
+        foreach (var reward in targetReward) {
             reward.SetLevel(targetLevel);
         }
 
-        // monster.ClearCallbacks();
         monster.controller.onDeathEnd += () => EnqueueMonster(monster);
         monster.transform.position = bossSpawnPoint;
         monster.InitMonster();
@@ -185,28 +137,10 @@ public class MonsterSpawner : MonoBehaviour
         return monster;
     }
 
-    // IEnumerator GenerateMonster()
-    // {
-    //     int count = 0;
-    //     while (!isOnClear)
-    //     {
-    //         while (count < spawnMaxCount)
-    //         {
-    //             InstantiateMonster();
-    //             ++count;
-    //             yield return regenTime;
-    //         }
-    //
-    //         yield return null;
-    //     }
-    // }
-
-    private void InstantiateAwakenMonster()
-    {
+    private void InstantiateAwakenMonster() {
     }
 
-    private void InstantiateGoldMonster()
-    {
+    private void InstantiateGoldMonster() {
         int index = Random.Range(0, dungeonData.stageSO.BasicMonstersBaseStatus.Length);
         BaseStatus targetBase = dungeonData.stageSO.BasicMonstersBaseStatus[index];
         BaseStatus targetPerLevel = dungeonData.stageSO.BasicMonstersPerLevel[index];
@@ -215,59 +149,25 @@ public class MonsterSpawner : MonoBehaviour
 
         MonsterData monster;
 
-        if (monsterPool.Count > 0)
-        {
+        if (monsterPool.Count > 0) {
             monster = monsterPool.Dequeue();
             monster.gameObject.SetActive(true);
         }
-        else
-        {
+        else {
             monster = Instantiate(dungeonData.stageSO.BasicMonstersPrefab[index]);
             monster.InitMonster();
             monster.controller.onDeathEnd += () => EnqueueMonster(monster);
-            // monster.controller.onDeathStart += () => monster.DropReward();
             monster.controller.onDeathStart += () => AddKillCount(monster);
         }
 
-        // Vector2 randPos = new Vector2(Random.Range(minPos.x, maxPos.x), Random.Range(minPos.y, maxPos.y));
-        // monster.transform.position = randPos;
         monster.transform.position =
             dungeonData.stageSO.BasicMonsterSpawnPosition[
                 Random.Range(0, dungeonData.stageSO.BasicMonsterSpawnPosition.Length - 1)];
         monster.InitializeData(targetBase, targetPerLevel, targetLevel, targetReward);
         monstersOnField.AddLast(monster);
     }
-    
-    // private void InstantiateEquipmentMonster()
-    // {
-    //     int index = Random.Range(0, dungeonData.stageSO.BasicMonstersBaseStatus.Length);
-    //     BaseStatus targetBase = dungeonData.stageSO.BasicMonstersBaseStatus[index];
-    //     BaseStatus targetPerLevel = dungeonData.stageSO.BasicMonstersPerLevel[index];
-    //     int targetLevel = dungeonData.dungeonLevel;
-    //     MonsterDropData[] targetReward = dungeonData.stageSO.BasicMonstersReward;
-    //
-    //     MonsterData monster;
-    //
-    //     if (monsterPool.Count > 0)
-    //     {
-    //         monster = monsterPool.Dequeue();
-    //         monster.gameObject.SetActive(true);
-    //     }
-    //     else
-    //     {
-    //         monster = Instantiate(dungeonData.stageSO.BasicMonstersPrefab[index]);
-    //         monster.InitMonster();
-    //         monster.controller.onDeathEnd += () => EnqueueMonster(monster);
-    //         monster.controller.onDeathStart += () => AddKillCount(monster);
-    //     }
-    //
-    //     monster.transform.position = dungeonData.stageSO.BasicMonsterSpawnPosition[0];
-    //     monster.InitializeData(targetBase, targetPerLevel, targetLevel, targetReward);
-    //     monstersOnField.AddLast(monster);
-    // }
 
-    private void InstantiateMonster()
-    {
+    private void InstantiateMonster() {
         int index = Random.Range(0, stageData.BasicMonstersBaseStatus.Length);
         BaseStatus targetBase = stageData.BasicMonstersBaseStatus[index];
         BaseStatus targetPerLevel = stageData.BasicMonstersPerLevel[index];
@@ -275,22 +175,17 @@ public class MonsterSpawner : MonoBehaviour
                           stageData.StageNumber;
         MonsterDropData[] targetReward = stageData.BasicMonstersReward;
 
-        // Debug.Log($"Level {targetLevel}");
-        foreach (var reward in targetReward)
-        {
+        foreach (var reward in targetReward) {
             reward.SetLevel(targetLevel);
         }
 
         MonsterData monster;
 
-        if (monsterPool.Count > 0)
-        {
+        if (monsterPool.Count > 0) {
             monster = monsterPool.Dequeue();
             monster.gameObject.SetActive(true);
         }
-        else
-        {
-            // Debug.Log("ë‚˜ ìƒì„±");
+        else {
             monster = Instantiate(stageData.BasicMonstersPrefab[index]);
             monster.InitMonster();
             monster.controller.onDeathEnd += () => EnqueueMonster(monster);
@@ -301,53 +196,33 @@ public class MonsterSpawner : MonoBehaviour
         Vector2 randPos = new Vector2(Random.Range(minPos.x, maxPos.x), Random.Range(minPos.y, maxPos.y));
         monster.transform.position = randPos;
         monster.InitializeData(targetBase, targetPerLevel, targetLevel, targetReward);
-        // monster.health.Resurrection();
         monstersOnField.AddLast(monster);
     }
 
-    private void EnqueueMonster(MonsterData monster)
-    {
-        if (isOnClear) return;
+    private void EnqueueMonster(MonsterData monster) {
+        if (isOnClear)
+            return;
 
-        if (monstersOnField.Contains(monster)) monstersOnField.Remove(monster);
+        if (monstersOnField.Contains(monster))
+            monstersOnField.Remove(monster);
 
-        if (monster.type != Defines.EMonsterType.Boss)
-        {
+        if (monster.type != Defines.EMonsterType.Boss) {
             monster.gameObject.SetActive(false);
             monsterPool.Enqueue(monster);
-
-            // if (monstersOnField.Count == 0 && state == Defines.EStageState.Normal) StartGenerating();
         }
-        else
-        {
+        else {
             Destroy(monster.gameObject);
         }
     }
 
-    private void AddKillCount(MonsterData monster)
-    {
+    private void AddKillCount(MonsterData monster) {
         if (monster.type != Defines.EMonsterType.Boss)
             stageManager.AddKillCount();
     }
 
-    public void ClearMonsters()
-    {
+    public void ClearMonsters() {
         isOnClear = true;
-
-        // while(monstersOnField.Count > 0)
-        // {
-        //     var obj = monstersOnField.First.Value;
-        //     monstersOnField.RemoveFirst();
-        //     Destroy(obj.gameObject);
-        // }
-        //
-        // while (monsterPool.Count > 0)
-        // {
-        //     var obj = monsterPool.Dequeue();
-        //     Destroy(obj.gameObject);
-        // }
-        foreach (var monster in monstersOnField)
-        {
+        foreach (var monster in monstersOnField) {
             monster.gameObject.SetActive(false);
             monsterPool.Enqueue(monster);
         }
@@ -355,8 +230,7 @@ public class MonsterSpawner : MonoBehaviour
         monstersOnField.Clear();
     }
 
-    private void SetStageStageStage(Defines.EStageState state)
-    {
+    private void SetStageStageStage(Defines.EStageState state) {
         this.state = state;
     }
 }

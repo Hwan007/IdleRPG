@@ -59,6 +59,4 @@ public class StageDataSO : ScriptableObject
     public MonsterDropData[] BossMonsterReward => bossMonsterReward;
     public MonsterDropData[] BasicMonstersReward => basicMonstersReward;
     public Vector3[] BasicMonsterSpawnPosition => basicMonsterSpawnPosition;
-
-    //rewards (gold, expPerMonster, etc.)
 }

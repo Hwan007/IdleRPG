@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 [Serializable]
-public class BaseAchievement
-{
+public class BaseAchievement {
     public string achievementID;
 
     public string title;
@@ -10,7 +9,6 @@ public class BaseAchievement
 
     public EAchievementType type;
 
-    
     #region Field for Runtime
 
     public int count;
@@ -21,102 +19,83 @@ public class BaseAchievement
     public event Action<BaseAchievement> onComplete;
     public event Action<EQuestRewardType, int> onRewarded;
     public event Action<int> onUpdateCounter;
-    
+
     #endregion
 
-    public BaseAchievement(string id, string title, string description, EAchievementType type)
-    {
+    public BaseAchievement(string id, string title, string description, EAchievementType type) {
         achievementID = id;
         this.title = title;
         this.description = description;
         this.type = type;
     }
-    
-    public virtual void UpdateCounter(int current)
-    {
+
+    public virtual void UpdateCounter(int current) {
         count = current > GetGoal() ? GetGoal() : current;
         onUpdateCounter?.Invoke(current);
-        if (count >= GetGoal())
-        {
+        if (count >= GetGoal()) {
             QuestManager.instance.GetChecker(type).Save();
             CompleteAchievement();
         }
     }
 
-    public virtual void CompleteAchievement()
-    {
+    public virtual void CompleteAchievement() {
         onUpdateCounter = null;
         onComplete?.Invoke(this);
         isComplete = true;
         manager.UnsubscribeCounter(this);
     }
 
-    public virtual void InitializeInfo(QuestManager questManager)
-    {
+    public virtual void InitializeInfo(QuestManager questManager) {
         manager = questManager;
-        // isComplete = false;
-        // isRewarded = false;
     }
 
-    public virtual void GetReward()
-    {
-        if (manager.GiveReward(GetRewardType(), GetRewardAmount()))
-        {
+    public virtual void GetReward() {
+        if (manager.GiveReward(GetRewardType(), GetRewardAmount())) {
             onRewarded?.Invoke(GetRewardType(), GetRewardAmount());
             isRewarded = true;
         }
     }
 
-    public virtual int GetRewardAmount()
-    {
+    public virtual int GetRewardAmount() {
         return 0;
     }
 
-    public virtual EQuestRewardType GetRewardType()
-    {
+    public virtual EQuestRewardType GetRewardType() {
         return EQuestRewardType.Gold;
     }
 
-    public virtual int GetGoal()
-    {
+    public virtual int GetGoal() {
         return 1;
     }
 
-    public virtual int GetDescriptionGoal()
-    {
+    public virtual int GetDescriptionGoal() {
         return 1;
     }
 
-    public virtual int GetCount()
-    {
+    public virtual int GetCount() {
         return count;
     }
 
-    public virtual string GetDescription()
-    {
+    public virtual string GetDescription() {
         return description;
     }
 
-    public virtual int GetID()
-    {
+    public virtual int GetID() {
         var id = achievementID.Split(' ');
         var num = int.Parse(id[^1]);
         return num;
     }
 
-    public virtual void Save()
-    {
+    public virtual void Save() {
         DataManager.Instance.Save($"{achievementID}_{nameof(isRewarded)}", isRewarded);
     }
 
-    public virtual void Load()
-    {
+    public virtual void Load() {
         isRewarded = DataManager.Instance.Load($"{achievementID}_{nameof(isRewarded)}", false);
         isComplete = isRewarded;
     }
 
-    public virtual void InitCount()
-    {
+    public virtual void InitCount() {
         onStart?.Invoke(this);
     }
 }

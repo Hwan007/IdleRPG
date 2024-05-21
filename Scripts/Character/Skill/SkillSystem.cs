@@ -7,12 +7,12 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Utils;
 
-public class SkillSystem : AttackSystem
-{
-    [Header("ì§€ì • í•„ìš”")]
+public class SkillSystem : AttackSystem {
+    #region »ý·«
+    [Header("ÁöÁ¤ ÇÊ¿ä")]
     public string skillName;
     public SkillSystem[] subSkill;
-    
+
     public ActiveSkillData activeSkillData { get; private set; }
     private int colliderDataIndex;
     private Transform targetTransform = null;
@@ -21,29 +21,24 @@ public class SkillSystem : AttackSystem
     private bool isEnd;
     private bool isTargeting;
 
-    public void InitData()
-    {
-        foreach (var sub in subSkill)
-        {
+    public void InitData() {
+        foreach (var sub in subSkill) {
             sub.InitData();
         }
     }
 
-    public void InitSkillSystem<T>(PlayerData data, T skill) where T : ActiveSkillData
-    {
+    public void InitSkillSystem<T>(PlayerData data, T skill) where T : ActiveSkillData {
         activeSkillData = skill;
         InitAttackSystem(data);
 
-        foreach (var sub in subSkill)
-        {
+        foreach (var sub in subSkill) {
             sub.InitSkillSystem(data, skill);
         }
 
         master = data.transform;
     }
 
-    public override void InitAttackSystem(PlayerData data)
-    {
+    public override void InitAttackSystem(PlayerData data) {
         status = data.status;
         targetLayerMask = data.targetLayerMask;
         targetTag = data.targetTag;
@@ -51,13 +46,11 @@ public class SkillSystem : AttackSystem
         controller = data.controller;
         spriteController = data.spriteController;
 
-        if (attackColliders != null)
-        {
+        if (attackColliders != null) {
             attackDatas = new AttackData[attackColliders.Length];
-            for (int i = 0; i < attackColliders.Length; ++i)
-            {
+            for (int i = 0; i < attackColliders.Length; ++i) {
                 attackColliders[i].InitAttackCollider(data);
-                attackDatas[i] = new AttackData(data, activeSkillData.colliderInfo[i].knockback, activeSkillData.Multiplier+status.currentSkillDamage, activeSkillData.maxAttackCount,
+                attackDatas[i] = new AttackData(data, activeSkillData.colliderInfo[i].knockback, activeSkillData.Multiplier + status.currentSkillDamage, activeSkillData.maxAttackCount,
                     activeSkillData.isContinuous, activeSkillData.tickUnitTime);
             }
 
@@ -66,15 +59,13 @@ public class SkillSystem : AttackSystem
         }
     }
 
-    public virtual void StartSkill()
-    {
+    public virtual void StartSkill() {
         StartVarSetting(true);
 
         StartCoroutine(SingleMeleeSkill());
     }
 
-    public virtual void StartSkill(Transform transform)
-    {
+    public virtual void StartSkill(Transform transform) {
         ((Component)this).transform.position = transform.position;
         targetTransform = transform;
         StartVarSetting(false);
@@ -82,18 +73,14 @@ public class SkillSystem : AttackSystem
         StartCoroutine(MultiTargetingSkill());
     }
 
-    public virtual bool StartSkill(Transform[] transforms)
-    {
+    public virtual bool StartSkill(Transform[] transforms) {
         StartVarSetting(true);
         int enemy = 0;
         bool isPerformed = false;
-        for (int i = 0; i < subSkill.Length && i < transforms.Length; ++i)
-        {
+        for (int i = 0; i < subSkill.Length && i < transforms.Length; ++i) {
             Transform target = null;
-            while (enemy < transforms.Length)
-            {
-                if (Utils.Vector.BoxDistance(transforms[enemy].position, master.position, 1, 2) < activeSkillData.attackDistance)
-                {
+            while (enemy < transforms.Length) {
+                if (Utils.Vector.BoxDistance(transforms[enemy].position, master.position, 1, 2) < activeSkillData.attackDistance) {
                     target = transforms[enemy];
                     ++enemy;
                     break;
@@ -101,8 +88,7 @@ public class SkillSystem : AttackSystem
                 ++enemy;
             }
 
-            if (target != null)
-            {
+            if (target != null) {
                 subSkill[i].StartSkill(target);
                 isPerformed = true;
             }
@@ -110,13 +96,11 @@ public class SkillSystem : AttackSystem
                 break;
         }
 
-        if (isPerformed)
-        {
+        if (isPerformed) {
             StartCoroutine(MultiTargetingSkill());
             return true;
         }
-        else
-        {
+        else {
             gameObject.SetActive(false);
             targetTransform = null;
             StopSubSkill();
@@ -124,8 +108,7 @@ public class SkillSystem : AttackSystem
         }
     }
 
-    private void StartVarSetting(bool isMaster)
-    {
+    private void StartVarSetting(bool isMaster) {
         // elapsedTime = .0f;
         colliderDataIndex = 0;
         gameObject.SetActive(true);
@@ -135,45 +118,33 @@ public class SkillSystem : AttackSystem
         isTargeting = activeSkillData.isFollowing;
     }
 
-    public void StopSubSkill()
-    {
-        if (isMaster)
-        {
-            foreach (var atkcol in attackColliders)
-            {
+    public void StopSubSkill() {
+        if (isMaster) {
+            foreach (var atkcol in attackColliders) {
                 atkcol.ClearTickList();
             }
-            foreach (var skill in subSkill)
-            {
+            foreach (var skill in subSkill) {
                 skill.StopSubSkill();
             }
         }
-        else
-        {
+        else {
             gameObject.SetActive(false);
             targetTransform = null;
-            foreach (var atkcol in attackColliders)
-            {
+            foreach (var atkcol in attackColliders) {
                 atkcol.ClearTickList();
             }
         }
     }
-
-    private IEnumerator MultiTargetingSkill()
-    {
+    #endregion
+    private IEnumerator MultiTargetingSkill() {
         float elapsedTime = .0f;
-        while (elapsedTime < activeSkillData.skillFullTime)
-        {
+        while (elapsedTime < activeSkillData.skillFullTime) {
             elapsedTime += Time.deltaTime;
 
-            if (!isEnd && !isMaster)
-            {
-                if (isTargeting)
-                {
-                    if (targetTransform != null)
-                    {
-                        if (!targetTransform.gameObject.activeInHierarchy)
-                        {
+            if (!isEnd && !isMaster) {
+                if (isTargeting) {
+                    if (targetTransform != null) {
+                        if (!targetTransform.gameObject.activeInHierarchy) {
                             targetTransform = null;
                             isTargeting = false;
                         }
@@ -185,14 +156,12 @@ public class SkillSystem : AttackSystem
                 }
 
                 while (attackColliders.Length > colliderDataIndex &&
-                       activeSkillData.colliderInfo[colliderDataIndex].startTime / status.currentAttackSpeed < elapsedTime)
-                {
+                       activeSkillData.colliderInfo[colliderDataIndex].startTime / status.currentAttackSpeed < elapsedTime) {
                     var atkcol = activeSkillData.colliderInfo[colliderDataIndex];
                     AttackEvent(atkcol.offset, atkcol.type, atkcol.size, colliderDataIndex, atkcol.knockback,
                         atkcol.duration);
                     ++colliderDataIndex;
-                    if (colliderDataIndex >= activeSkillData.colliderInfo.Length)
-                    {
+                    if (colliderDataIndex >= activeSkillData.colliderInfo.Length) {
                         isEnd = true;
                         break;
                     }
@@ -207,27 +176,21 @@ public class SkillSystem : AttackSystem
         StopSubSkill();
     }
 
-    private IEnumerator SingleMeleeSkill()
-    {
+    private IEnumerator SingleMeleeSkill() {
         float elapsedTime = .0f;
         float total = .0f;
-        while (total < activeSkillData.skillFullTime)
-        {
+        while (total < activeSkillData.skillFullTime) {
             elapsedTime += Time.deltaTime;
             total += Time.deltaTime;
-            if (!isEnd)
-            {
-                while (activeSkillData.colliderInfo.Length > colliderDataIndex && activeSkillData.colliderInfo[colliderDataIndex].startTime / status.currentAttackSpeed < elapsedTime)
-                {
+            if (!isEnd) {
+                while (activeSkillData.colliderInfo.Length > colliderDataIndex && activeSkillData.colliderInfo[colliderDataIndex].startTime / status.currentAttackSpeed < elapsedTime) {
                     var atkcol = activeSkillData.colliderInfo[colliderDataIndex];
                     AttackEvent(atkcol.offset, atkcol.type, atkcol.size, colliderDataIndex, atkcol.knockback, atkcol.duration);
                     ++colliderDataIndex;
-                    if (colliderDataIndex >= activeSkillData.colliderInfo.Length)
-                    {
-                        if (activeSkillData.isRepeat)
-                        {
+                    if (colliderDataIndex >= activeSkillData.colliderInfo.Length) {
+                        if (activeSkillData.isRepeat) {
                             colliderDataIndex = 0;
-                            elapsedTime = - atkcol.duration;
+                            elapsedTime = -atkcol.duration;
                         }
                         else
                             isEnd = true;
@@ -235,10 +198,10 @@ public class SkillSystem : AttackSystem
                     }
                 }
             }
-            
+
             yield return null;
         }
-        
+
         targetTransform = null;
         StopSubSkill();
         gameObject.SetActive(false);
