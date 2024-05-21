@@ -9,22 +9,21 @@ using UnityEngine.Pool;
 using UnityEngine.Serialization;
 using Utils;
 
-public class SkillManager : MonoBehaviour
-{
+public class SkillManager : MonoBehaviour {
     public static SkillManager instance;
 
-    [Header("지정 필요")] 
+    [Header("지정 필요")]
     public SkillSystem[] playerActiveSkillPrefabs;
     public ActiveSkillFixedInfo[] activeSkillFixedInfos;
     public BuffSkillFixedInfo[] buffSkillFixedInfos;
     public PassiveSkillFixedInfo[] passiveSkillFixedInfos;
     public Sprite[] skillIcon;
 
-    [Header("특수기 전용")] 
+    [Header("특수기 전용")]
     public SpecialSkillData playerSpecialSkillData;
     public ActiveSkillFixedInfo playerSpecialActiveSkillInfo;
 
-    [Header("추출 확인용")] 
+    [Header("추출 확인용")]
     public ActiveSkillData[] playerActiveSkillDatas;
     public BuffSkillData[] playerBuffSkillDatas;
     public PassiveSkillData[] playerPassiveSkillData;
@@ -38,7 +37,6 @@ public class SkillManager : MonoBehaviour
 
     protected float specialTimer;
     public event Action<float, float> onSpecialTimer;
-    // public event Action<int, float, float> onSkillTimer;
 
     private UISkillSlot uiSkillSlot;
 
@@ -49,13 +47,10 @@ public class SkillManager : MonoBehaviour
     public event Action<BigInteger> onSkillLevelUpTotal;
     private BigInteger totalSkillLevelUp;
     public BigInteger TotalSkilllevelUp => totalSkillLevelUp;
-    public bool IsAutoSkill
-    {
+    public bool IsAutoSkill {
         get => isAutoSkill;
-        set
-        {
-            if (isAutoSkill != value)
-            {
+        set {
+            if (isAutoSkill != value) {
                 SaveAuto(value);
             }
 
@@ -66,39 +61,35 @@ public class SkillManager : MonoBehaviour
 
     private bool isAutoSkill;
 
-    private void Start()
-    {
+    private void Start() {
         skillTimerCoroutine = StartCoroutine(SkillTimer());
     }
 
-    public List<BaseSkillData> GetSkillsOnRarity(ERarity rare)
-    {
+    public List<BaseSkillData> GetSkillsOnRarity(ERarity rare) {
         return skillPerRarity[rare];
     }
 
-    public int GetSkillOwnCount(ESkillType type)
-    {
+    public int GetSkillOwnCount(ESkillType type) {
         int count = 0;
-        switch (type)
-        {
+        switch (type) {
             case ESkillType.Active:
-                foreach (var skill in playerActiveSkillDatas)
-                {
-                    if (skill.isOwned) ++count;
+                foreach (var skill in playerActiveSkillDatas) {
+                    if (skill.isOwned)
+                        ++count;
                 }
 
                 break;
             case ESkillType.Buff:
-                foreach (var skill in playerBuffSkillDatas)
-                {
-                    if (skill.isOwned) ++count;
+                foreach (var skill in playerBuffSkillDatas) {
+                    if (skill.isOwned)
+                        ++count;
                 }
 
                 break;
             case ESkillType.Passive:
-                foreach (var skill in playerPassiveSkillData)
-                {
-                    if (skill.isOwned) ++count;
+                foreach (var skill in playerPassiveSkillData) {
+                    if (skill.isOwned)
+                        ++count;
                 }
 
                 break;
@@ -107,8 +98,7 @@ public class SkillManager : MonoBehaviour
         return count;
     }
 
-    private void Awake()
-    {
+    private void Awake() {
         instance = this;
         animSkillSystems = new Dictionary<string, SkillSystem>();
         animSkillData = new Dictionary<string, AnimSkillData>();
@@ -119,46 +109,30 @@ public class SkillManager : MonoBehaviour
         timer = new Dictionary<string, float>();
     }
 
-    private IEnumerator SkillTimer()
-    {
-        while (true)
-        {
-            if (specialTimer > 0)
-            {
+    private IEnumerator SkillTimer() {
+        while (true) {
+            if (specialTimer > 0) {
                 specialTimer -= Time.deltaTime;
                 CallUpdateSpecialSkillTimer(specialTimer);
             }
 
-            foreach (var (skillName, data) in animSkillData)
-            {
+            foreach (var (skillName, data) in animSkillData) {
                 var t = timer[skillName];
 
-                if (t > 0)
-                {
+                if (t > 0) {
                     var restT = t - Time.deltaTime;
                     timer[skillName] = restT;
 
-                    if (PlayerManager.instance.skillNamtToSlot.TryGetValue(skillName, out int slot))
-                    {
-                        // onSkillTimer?.Invoke(slot, restT, allSkillDatas[skillName].coolTime);
+                    if (PlayerManager.instance.skillNamtToSlot.TryGetValue(skillName, out int slot)) {
                         var ui = UIManager.instance.TryGetUI<UISkillSlot>();
                         ui.UpdateTimer(slot, restT, animSkillData[skillName].coolTime);
                     }
                 }
-                else
-                {
-                    if (IsAutoSkill && PlayerManager.instance.skillNamtToSlot.TryGetValue(skillName, out int slot))
-                    {
+                else {
+                    if (IsAutoSkill && PlayerManager.instance.skillNamtToSlot.TryGetValue(skillName, out int slot)) {
                         if (PlayerManager.instance.CheckStateCanUseSkill())
                             PlayerManager.instance.UseSkill(slot);
                     }
-                    // if (isAutoSkill && allSkillDatas[skillName].isEquipped)
-                    // {
-                    //     // if (PlayerManager.instance.CheckStateCanUseSkill())
-                    //     // {
-                    //     //     PlayerManager.instance.player.controller.CallSkill(skillName);
-                    //     // }
-                    // }
                 }
             }
 
@@ -166,45 +140,33 @@ public class SkillManager : MonoBehaviour
         }
     }
 
-    private void CallUpdateSpecialSkillTimer(float time)
-    {
+    private void CallUpdateSpecialSkillTimer(float time) {
         onSpecialTimer?.Invoke(time, playerSpecialSkillData.coolTime);
     }
 
-    public void InitSkillManager()
-    {
-        // if (ES3.KeyExists("Init_Game"))
-        // {
-        //     playerActiveSkillDatas = DataManager.Instance.Load(activeSkillSaveKey, playerActiveSkillDatas);
-        //     playerPassiveSkillDatas = DataManager.Instance.Load(passiveSkillSaveKey, playerPassiveSkillDatas);
-        // }
+    public void InitSkillManager() {
         uiSkillSlot = UIManager.instance.TryGetUI<UISkillSlot>();
 
-        foreach (var info in activeSkillFixedInfos)
-        {
+        foreach (var info in activeSkillFixedInfos) {
             Array.Find(playerActiveSkillDatas, x => x.skillName == info.skillName).SetInfo(info);
         }
 
-        foreach (var info in buffSkillFixedInfos)
-        {
+        foreach (var info in buffSkillFixedInfos) {
             Array.Find(playerBuffSkillDatas, x => x.skillName == info.skillName).SetInfo(info);
         }
 
-        foreach (var info in passiveSkillFixedInfos)
-        {
+        foreach (var info in passiveSkillFixedInfos) {
             Array.Find(playerPassiveSkillData, x => x.skillName == info.skillName).SetInfo(info);
         }
 
         Load();
-        foreach (var activeSkill in playerActiveSkillDatas)
-        {
+        foreach (var activeSkill in playerActiveSkillDatas) {
             animSkillData.TryAdd(activeSkill.skillName, activeSkill);
             skillPerRarity[activeSkill.rarity].Add(activeSkill);
             timer.Add(activeSkill.skillName, 0.0f);
         }
 
-        for (int i = 0; i < playerActiveSkillPrefabs.Length; ++i)
-        {
+        for (int i = 0; i < playerActiveSkillPrefabs.Length; ++i) {
             var skill = Instantiate(playerActiveSkillPrefabs[i]);
             skill.gameObject.SetActive(false);
             skill.InitData();
@@ -213,16 +175,14 @@ public class SkillManager : MonoBehaviour
             animSkillSystems.TryAdd(skill.skillName, skill);
         }
 
-        foreach (var buffSkill in playerBuffSkillDatas)
-        {
+        foreach (var buffSkill in playerBuffSkillDatas) {
             animSkillData.TryAdd(buffSkill.skillName, buffSkill);
             skillPerRarity[buffSkill.rarity].Add(buffSkill);
             if (buffSkill.coolTime > 0)
                 timer.Add(buffSkill.skillName, 0.0f);
         }
 
-        foreach (var passiveSkill in playerPassiveSkillData)
-        {
+        foreach (var passiveSkill in playerPassiveSkillData) {
             skillPerRarity[passiveSkill.rarity].Add(passiveSkill);
         }
 
@@ -232,8 +192,7 @@ public class SkillManager : MonoBehaviour
             playerSpecialSkillData);
     }
 
-    private void Load()
-    {
+    private void Load() {
         LoadAuto();
 
         foreach (var skill in playerActiveSkillDatas)
@@ -246,28 +205,23 @@ public class SkillManager : MonoBehaviour
         totalSkillLevelUp = new BigInteger(DataManager.Instance.Load<string>($"{nameof(SkillManager)}_{nameof(totalSkillLevelUp)}", "0"));
     }
 
-    private void LoadAuto()
-    {
+    private void LoadAuto() {
         isAutoSkill = DataManager.Instance.Load<bool>(nameof(isAutoSkill), false);
-        if (isAutoSkill) uiSkillSlot.ShowUI();
+        if (isAutoSkill)
+            uiSkillSlot.ShowUI();
     }
 
-    private void SaveAuto(bool value)
-    {
+    private void SaveAuto(bool value) {
         DataManager.Instance.Save<bool>(nameof(isAutoSkill), value);
     }
 
-    public SkillSystem GetSkillSystem(string skillName)
-    {
+    public SkillSystem GetSkillSystem(string skillName) {
         return animSkillSystems[skillName];
     }
 
-    public bool CallActiveSkill(string skillName, out Vector3 direction)
-    {
-        if (animSkillData[skillName] is ActiveSkillData active)
-        {
-            switch (active.attackType)
-            {
+    public bool CallActiveSkill(string skillName, out Vector3 direction) {
+        if (animSkillData[skillName] is ActiveSkillData active) {
+            switch (active.attackType) {
                 case ESkillAttackType.Single:
                     return CallSkillSingle(active.skillName, out direction);
                 case ESkillAttackType.Multiple:
@@ -280,20 +234,12 @@ public class SkillManager : MonoBehaviour
     }
 
     // Search Target and Start Skill
-    private bool CallSkillSingle(string skillName, out Vector3 direction)
-    {
-        if (!PlayerManager.instance.player.health.SubstractMP(animSkillData[skillName].ManaConsume))
-        {
+    private bool CallSkillSingle(string skillName, out Vector3 direction) {
+        if (!PlayerManager.instance.player.health.SubstractMP(animSkillData[skillName].ManaConsume)) {
             direction = Vector3.zero;
             return false;
         }
 
-        // var target = StageManager.instance.TryGetTarget();
-        //
-        // if (ReferenceEquals(target, null) || target == null)
-        //     direction = Vector3.zero;
-        // else
-        //     direction = target.transform.position - transform.position;
         direction = Vector3.left * PlayerManager.instance.player.spriteController.horizontalDirection;
 
         StartSingleSkill(skillName, PlayerManager.instance.player.transform.position, direction);
@@ -301,26 +247,21 @@ public class SkillManager : MonoBehaviour
     }
 
     // Search Targets and Start Skill
-    private bool CallSkillMultiple(string skillName, out Vector3 direction)
-    {
+    private bool CallSkillMultiple(string skillName, out Vector3 direction) {
         var targets = StageManager.instance.GetTargets();
-        if (ReferenceEquals(targets, null))
-        {
+        if (ReferenceEquals(targets, null)) {
             direction = Vector3.zero;
             return false;
         }
 
         List<Transform> targetTransforms = new List<Transform>();
-        foreach (var target in targets)
-        {
+        foreach (var target in targets) {
             if (!target.IsDead && target.gameObject.activeInHierarchy)
                 targetTransforms.Add(target.transform);
         }
 
-        if (targetTransforms.Count > 0)
-        {
-            if (!PlayerManager.instance.player.health.SubstractMP(animSkillData[skillName].ManaConsume))
-            {
+        if (targetTransforms.Count > 0) {
+            if (!PlayerManager.instance.player.health.SubstractMP(animSkillData[skillName].ManaConsume)) {
                 direction = Vector3.zero;
                 return false;
             }
@@ -329,33 +270,28 @@ public class SkillManager : MonoBehaviour
             direction = targetTransforms[0].position;
             return true;
         }
-        else
-        {
+        else {
             direction = Vector3.zero;
             return false;
         }
     }
 
     // Start Skill
-    private void StartSingleSkill(string skillName, Vector3 center, Vector3 direction)
-    {
+    private void StartSingleSkill(string skillName, Vector3 center, Vector3 direction) {
         timer[skillName] = animSkillData[skillName].coolTime;
 
         var skill = GetSkillSystem(skillName);
 
         skill.transform.position = center;
-        // Debug.Log($"skill direction {direction.x}.{direction.y}.{direction.z}");
         var dir = GetLeftOrRight(direction);
         var local = skill.transform.localScale;
-        // Debug.Log($"skill dir {dir.x}.{dir.y}.{dir.z}");
         skill.transform.localScale = new Vector3(Mathf.Abs(local.x) * dir.x, local.y * dir.y, local.z * dir.z);
 
         skill.StartSkill();
     }
 
     // Start Skill
-    private void StartMultipleSkill(string skillName, Transform[] transforms)
-    {
+    private void StartMultipleSkill(string skillName, Transform[] transforms) {
         timer[skillName] = animSkillData[skillName].coolTime;
 
         var skill = GetSkillSystem(skillName);
@@ -363,19 +299,16 @@ public class SkillManager : MonoBehaviour
         skill.StartSkill(transforms);
     }
 
-    public bool CallBuffSkill(string skillName, out float duration)
-    {
+    public bool CallBuffSkill(string skillName, out float duration) {
         duration = .0f;
         if (!PlayerManager.instance.player.health.SubstractMP(animSkillData[skillName].ManaConsume))
             return false;
 
-        if (animSkillData[skillName] is BuffSkillData buff)
-        {
+        if (animSkillData[skillName] is BuffSkillData buff) {
             duration = buff.skillFullTime;
             if (buff.coolTime > 0)
                 timer[skillName] = buff.coolTime;
 
-            // TODO apply buff
             PlayerManager.instance.AddBuffToList(buff.tempBuffStatus);
             if (buff.coolTime > 0)
                 StartCoroutine(BuffDuration(buff.skillFullTime, buff.tempBuffStatus));
@@ -385,8 +318,7 @@ public class SkillManager : MonoBehaviour
         return false;
     }
 
-    public bool CanUseEquippedSkill(string skillName)
-    {
+    public bool CanUseEquippedSkill(string skillName) {
         Debug.Assert(animSkillData[skillName].isEquipped);
         if (timer[skillName] <= 0)
             return true;
@@ -394,34 +326,28 @@ public class SkillManager : MonoBehaviour
     }
 
 
-    public bool CallSpecial(out float duration)
-    {
+    public bool CallSpecial(out float duration) {
         Debug.Assert(CanUseSpecial());
         specialTimer = playerSpecialSkillData.coolTime;
 
-        // TODO use Special skill
         duration = playerSpecialSkillData.skillFullTime;
 
         PlayerManager.instance.AddBuffToList(playerSpecialSkillData.tempBuffStatus);
         StartCoroutine(BuffDuration(playerSpecialSkillData.skillFullTime, playerSpecialSkillData.tempBuffStatus));
 
-        // TODO Active special skill
         PlayerManager.instance.player.specialSkill.StartSkill();
 
         return true;
     }
 
-    public bool CanUseSpecial()
-    {
+    public bool CanUseSpecial() {
         if (specialTimer <= 0)
             return true;
         return false;
     }
 
-    IEnumerator BuffDuration(float duration, TempBuffStatus tempBuffStatus)
-    {
-        while (duration > 0)
-        {
+    IEnumerator BuffDuration(float duration, TempBuffStatus tempBuffStatus) {
+        while (duration > 0) {
             duration -= Time.deltaTime;
             yield return null;
         }
@@ -429,8 +355,7 @@ public class SkillManager : MonoBehaviour
         PlayerManager.instance.RemoveBuffFromList(tempBuffStatus);
     }
 
-    public void EquipSkill(int slot, AnimSkillData target)
-    {
+    public void EquipSkill(int slot, AnimSkillData target) {
         if (PlayerManager.instance.EquippedSkill[slot] != null)
             PlayerManager.instance.UnequipSkill(slot);
         PlayerManager.instance.EquipSkill(slot, target);
@@ -440,58 +365,34 @@ public class SkillManager : MonoBehaviour
         target.SaveEquip(true, slot);
     }
 
-    public void UnequipSkill(int slot)
-    {
+    public void UnequipSkill(int slot) {
         PlayerManager.instance.UnequipSkill(slot);
 
         Debug.Assert(uiSkillSlot != null, "[SkillManager] UI Skill Slot not found.");
         uiSkillSlot.ShowVoidUI(slot);
     }
 
-    // public void UseSkill(string skillName)
-    // {
-    //     var skillData = allSkillDatas[skillName];
-    //
-    //     switch (skillData.attackType)
-    //     {
-    //         case ESkillAttackType.Single:
-    //             PlayerManager.instance.player.controller.CallSkillSingle(skillData.skillName);
-    //             break;
-    //         case ESkillAttackType.Multiple:
-    //             PlayerManager.instance.player.controller.CallSkillMultiple(skillData.skillName);
-    //             break;
-    //     }
-    // }
-
-    public AnimSkillData GetSkill(string skillname)
-    {
+    public AnimSkillData GetSkill(string skillname) {
         return animSkillData[skillname];
     }
 
-    public Sprite GetIcon(int skillDataIconIndex)
-    {
+    public Sprite GetIcon(int skillDataIconIndex) {
         return skillIcon[skillDataIconIndex];
     }
 
-    public Vector3 GetLeftOrRight(Vector3 direction)
-    {
+    public Vector3 GetLeftOrRight(Vector3 direction) {
         var dec = Vector2.Dot(direction, Vector2.right);
-        if (dec < 0)
-        {
+        if (dec < 0) {
             return new Vector3(1, 1, 1);
         }
-        else
-        {
+        else {
             return new Vector3(-1, 1, 1);
         }
     }
-    
+
     // TODO skill level up
-    public bool TryLevelOneUp<T>(T skill) where T : BaseSkillData
-    {
-        if (skill.TryLevelUp())
-        {
-            // skill.Save(ESkillDataType.Level);
+    public bool TryLevelOneUp<T>(T skill) where T : BaseSkillData {
+        if (skill.TryLevelUp()) {
             ++totalSkillLevelUp;
             return true;
         }
@@ -499,8 +400,7 @@ public class SkillManager : MonoBehaviour
         return false;
     }
 
-    public void SaveTotalSkillLevelUp()
-    {
+    public void SaveTotalSkillLevelUp() {
         onSkillLevelUpTotal?.Invoke(totalSkillLevelUp);
         DataManager.Instance.Save($"{nameof(SkillManager)}_{nameof(totalSkillLevelUp)}", totalSkillLevelUp.ToString());
     }
@@ -508,20 +408,17 @@ public class SkillManager : MonoBehaviour
 
 #if UNITY_EDITOR
 [CustomEditor(typeof(SkillManager))]
-public class CustomEditorSkillManager : Editor
-{
+public class CustomEditorSkillManager : Editor {
     private TextAsset csvFile1;
     private TextAsset csvFile2;
     private TextAsset csvFile3;
 
-    public override void OnInspectorGUI()
-    {
+    public override void OnInspectorGUI() {
         base.OnInspectorGUI();
         EditorGUILayout.BeginHorizontal();
 
         csvFile1 = EditorGUILayout.ObjectField("액티브 CSV", csvFile1, typeof(TextAsset), true) as TextAsset;
-        if (GUILayout.Button("액티브 스킬 추출"))
-        {
+        if (GUILayout.Button("액티브 스킬 추출")) {
             LoadActiveSkillFromCSV(csvFile1);
         }
 
@@ -530,8 +427,7 @@ public class CustomEditorSkillManager : Editor
         EditorGUILayout.BeginHorizontal();
 
         csvFile2 = EditorGUILayout.ObjectField("버프 CSV", csvFile2, typeof(TextAsset), true) as TextAsset;
-        if (GUILayout.Button("버프 스킬 추출"))
-        {
+        if (GUILayout.Button("버프 스킬 추출")) {
             LoadBuffSkillFromCSV(csvFile2);
         }
 
@@ -540,25 +436,22 @@ public class CustomEditorSkillManager : Editor
         EditorGUILayout.BeginHorizontal();
 
         csvFile3 = EditorGUILayout.ObjectField("패시브 CSV", csvFile3, typeof(TextAsset), true) as TextAsset;
-        if (GUILayout.Button("패시브 스킬 추출"))
-        {
+        if (GUILayout.Button("패시브 스킬 추출")) {
             LoadPassiveSkillFromCSV(csvFile3);
         }
 
         EditorGUILayout.EndHorizontal();
     }
 
-    private void LoadBuffSkillFromCSV(TextAsset csv)
-    {
+    private void LoadBuffSkillFromCSV(TextAsset csv) {
         List<BuffSkillData> buffSkills = new List<BuffSkillData>();
 
         string[] lines = csv.text.Split('\n');
 
-        for (int i = 1; i < lines.Length; i++) // 첫 번째 줄(헤더) 건너뛰기
+        for (int i = 1; i < lines.Length; i++)
         {
             string line = lines[i];
-            if (!string.IsNullOrWhiteSpace(line))
-            {
+            if (!string.IsNullOrWhiteSpace(line)) {
                 string[] fields = line.Split(',');
                 int j = 0;
 
@@ -617,14 +510,11 @@ public class CustomEditorSkillManager : Editor
             }
         }
 
-        // ES3.Save(nameof(passiveSkills), passiveSkills.ToArray());
         (target as SkillManager).playerBuffSkillDatas = buffSkills.ToArray();
-        // serializedObject.ApplyModifiedProperties();
         EditorUtility.SetDirty(target);
     }
 
-    private void LoadPassiveSkillFromCSV(TextAsset csv)
-    {
+    private void LoadPassiveSkillFromCSV(TextAsset csv) {
         List<PassiveSkillData> passiveSkills = new List<PassiveSkillData>();
 
         string[] lines = csv.text.Split('\n');
@@ -632,8 +522,7 @@ public class CustomEditorSkillManager : Editor
         for (int i = 1; i < lines.Length; i++) // 첫 번째 줄(헤더) 건너뛰기
         {
             string line = lines[i];
-            if (!string.IsNullOrWhiteSpace(line))
-            {
+            if (!string.IsNullOrWhiteSpace(line)) {
                 string[] fields = line.Split(',');
                 int j = 0;
 
@@ -662,14 +551,11 @@ public class CustomEditorSkillManager : Editor
             }
         }
 
-        // ES3.Save(nameof(passiveSkills), passiveSkills.ToArray());
         (target as SkillManager).playerPassiveSkillData = passiveSkills.ToArray();
-        // serializedObject.ApplyModifiedProperties();
         EditorUtility.SetDirty(target);
     }
 
-    private void LoadActiveSkillFromCSV(TextAsset csv)
-    {
+    private void LoadActiveSkillFromCSV(TextAsset csv) {
         List<ActiveSkillData> activeSkills = new List<ActiveSkillData>();
 
         string[] lines = csv.text.Split('\n');
@@ -677,8 +563,7 @@ public class CustomEditorSkillManager : Editor
         for (int i = 1; i < lines.Length; i++) // 첫 번째 줄(헤더) 건너뛰기
         {
             string line = lines[i];
-            if (!string.IsNullOrWhiteSpace(line))
-            {
+            if (!string.IsNullOrWhiteSpace(line)) {
                 string[] fields = line.Split(',');
                 int j = 0;
 
@@ -722,20 +607,16 @@ public class CustomEditorSkillManager : Editor
             }
         }
 
-        // ES3.Save(nameof(activeSkills), activeSkills.ToArray());
         (target as SkillManager).playerActiveSkillDatas = activeSkills.ToArray();
         EditorUtility.SetDirty(target);
-        // serializedObject.ApplyModifiedProperties();
     }
 
-    private void Extract(string str, out int data)
-    {
+    private void Extract(string str, out int data) {
         var isSuccess = int.TryParse(str, out data);
         Debug.Assert(isSuccess, $"Failed {str}");
     }
 
-    private void Extract(string str, out float data)
-    {
+    private void Extract(string str, out float data) {
         var isSuccess = float.TryParse(str, out data);
         Debug.Assert(isSuccess, $"Failed {str}");
     }

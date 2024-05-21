@@ -5,16 +5,16 @@ using Defines;
 using UnityEngine;
 
 [Serializable]
-public class AttackSystem : MonoBehaviour
-{
+public class AttackSystem : MonoBehaviour {
+    #region ����
     public LayerMask targetLayerMask { get; protected set; }
     public string targetTag { get; protected set; }
     protected CurrentStatus status;
 
-    [Header("지정 필요")] public AttackCollider[] attackColliders;
+    public AttackCollider[] attackColliders;
     public AttackRangeSystem attackRangeSystem = null;
 
-    [Header("테스트 확인용")] public AttackData[] attackDatas;
+    public AttackData[] attackDatas;
     public GameObject[] attackEffect;
     public Collider2D target;
     public bool canAttack;
@@ -22,8 +22,7 @@ public class AttackSystem : MonoBehaviour
     protected BaseController controller;
 
 
-    public virtual void InitAttackSystem(PlayerData data)
-    {
+    public virtual void InitAttackSystem(PlayerData data) {
         status = data.status;
         targetLayerMask = data.targetLayerMask;
         targetTag = data.targetTag;
@@ -32,8 +31,7 @@ public class AttackSystem : MonoBehaviour
         spriteController = data.spriteController;
 
         attackDatas = new AttackData[attackColliders.Length];
-        for (int i = 0; i < attackColliders.Length; ++i)
-        {
+        for (int i = 0; i < attackColliders.Length; ++i) {
             attackColliders[i].InitAttackCollider(data);
             attackDatas[i] = new AttackData(data, i == 2 ? 50 : 0, 100);
         }
@@ -44,8 +42,7 @@ public class AttackSystem : MonoBehaviour
             attackRangeSystem.InitAttackRangeSystem(this);
     }
 
-    public virtual void InitAttackSystem(MonsterData data)
-    {
+    public virtual void InitAttackSystem(MonsterData data) {
         status = data.status;
         targetLayerMask = data.targetLayerMask;
         targetTag = data.targetTag;
@@ -54,8 +51,7 @@ public class AttackSystem : MonoBehaviour
         spriteController = data.spriteController;
 
         attackDatas = new AttackData[attackColliders.Length];
-        for (int i = 0; i < attackColliders.Length; ++i)
-        {
+        for (int i = 0; i < attackColliders.Length; ++i) {
             attackColliders[i].InitAttackCollider(data);
             attackDatas[i] = new AttackData(data, 0, 100);
         }
@@ -64,36 +60,28 @@ public class AttackSystem : MonoBehaviour
             attackRangeSystem.InitAttackRangeSystem(this);
     }
 
-    public void AttackEffect(int index, Vector2 direction) //, Vector2 offset, Vector3 angleOffset)
-    {
-        if (attackEffect.Length > 0)
-        {
-            // Debug.Log("Effect!!!!!!!!");
+    public void AttackEffect(int index, Vector2 direction) {
+        if (attackEffect.Length > 0) {
             attackEffect[index].gameObject.SetActive(true);
             attackEffect[index].transform.localRotation =
                 Quaternion.Euler(0, spriteController.horizontalDirection > 0 ? 0 : 180, 0);
-            // attackEffect[index].transform.localPosition = new Vector3(spriteController.horizontalDirection * offset.x, offset.y);
         }
     }
 
     public void AttackEvent(Vector3 offset, ECalculatePositionType type, float size, int colIndex = 0,
-        int knockback = 0, float duration = 0)
-    {
-        // duration /= status.currentAttackSpeed;
+        int knockback = 0, float duration = 0) {
         StartCoroutine(MoveAttackCollider(offset, type, size, colIndex, knockback, duration));
     }
-
+    #endregion
     public IEnumerator MoveAttackCollider(Vector3 offset, ECalculatePositionType type, float size, int colIndex = 0,
-        int knockback = 0, float duration = 0f)
-    {
+        int knockback = 0, float duration = 0f) {
         float elapsedTime = 0;
 
         attackColliders[colIndex].SetAttackData(attackDatas[colIndex]);
         attackColliders[colIndex].gameObject.SetActive(true);
 
         Func<Vector3, float, float, float, Vector3> calculateFunc;
-        switch (type)
-        {
+        switch (type) {
             case ECalculatePositionType.Circle:
                 calculateFunc = CirclePosition;
                 break;
@@ -111,18 +99,15 @@ public class AttackSystem : MonoBehaviour
                 break;
         }
 
-        while (true)
-        {
+        while (true) {
             elapsedTime += Time.deltaTime * status.currentAttackSpeed;
             yield return null;
 
-            if (elapsedTime < duration)
-            {
+            if (elapsedTime < duration) {
                 Vector3 newPosition = calculateFunc.Invoke(offset, duration, elapsedTime, size);
                 attackColliders[colIndex].transform.localPosition = newPosition;
             }
-            else
-            {
+            else {
                 attackColliders[colIndex].gameObject.SetActive(false);
                 if (attackEffect.Length > 0 && colIndex == 2)
                     attackEffect[0].gameObject.SetActive(false);
@@ -131,41 +116,30 @@ public class AttackSystem : MonoBehaviour
         }
     }
 
-    public Vector3 StopPosition(Vector3 offset, float fullTime, float passedTime, float distance)
-    {
+    public Vector3 StopPosition(Vector3 offset, float fullTime, float passedTime, float distance) {
         var ret = (offset + distance * Vector3.right);
-        // return new Vector3(spriteController.horizontalDirection * ret.x, ret.y, ret.z);
         return new Vector3(ret.x, ret.y, ret.z);
     }
 
-    public Vector3 CirclePosition(Vector3 center, float fullTime, float passedTime, float radi)
-    {
+    public Vector3 CirclePosition(Vector3 center, float fullTime, float passedTime, float radi) {
         float angle = (passedTime / fullTime) * 120f;
         float radian = angle * Mathf.Deg2Rad;
         var ret = (center + new Vector3(Mathf.Sin(radian), Mathf.Cos(radian), 0) * radi);
-        // return new Vector3(spriteController.horizontalDirection * ret.x, ret.y, ret.z);
         return new Vector3(ret.x, ret.y, ret.z);
     }
 
-    public Vector3 LinePosition(Vector3 start, float fullTime, float passedTime, float length)
-    {
+    public Vector3 LinePosition(Vector3 start, float fullTime, float passedTime, float length) {
         var ret = (start + Vector3.right * (passedTime / fullTime * length));
-        // return new Vector3(spriteController.horizontalDirection * ret.x, ret.y, ret.z);
         return new Vector3(ret.x, ret.y, ret.z);
     }
 
-    public Vector3 OutbackPosition(Vector3 start, float fullTime, float passedTime, float length)
-    {
-        if (passedTime < fullTime / 2)
-        {
+    public Vector3 OutbackPosition(Vector3 start, float fullTime, float passedTime, float length) {
+        if (passedTime < fullTime / 2) {
             var ret = (start + Vector3.right * (length * passedTime / fullTime));
-            // return new Vector3(spriteController.horizontalDirection * ret.x, ret.y, ret.z);
             return new Vector3(ret.x, ret.y, ret.z);
         }
-        else
-        {
+        else {
             var ret = (start + Vector3.right * (length * (1 - passedTime / fullTime)));
-            // return new Vector3(spriteController.horizontalDirection * ret.x, ret.y, ret.z);
             return new Vector3(ret.x, ret.y, ret.z);
         }
     }

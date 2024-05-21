@@ -9,15 +9,15 @@ using UnityEngine.Serialization;
 using UnityEditor;
 #endif
 
-public class QuestManager : MonoBehaviour
-{
+public class QuestManager : MonoBehaviour {
     public static QuestManager instance;
 
+    #region ?�드 ?�략
     private Dictionary<EAchievementType, AchievementCounter> counterDictionary;
 
-    [Header("업적")] [SerializeField] private BaseAchievement[] achievements;
-    [Header("퀘스트")] public StackAchievement[] quests;
-    [Header("반복퀘스트")] public RepeatAchievement[] repeatQuest;
+    [SerializeField] private BaseAchievement[] achievements;
+    public StackAchievement[] quests;
+    public RepeatAchievement[] repeatQuest;
 
     private HashSet<AchievementCounter> stoppedCounter;
 
@@ -33,28 +33,26 @@ public class QuestManager : MonoBehaviour
         EAchievementType.ReachPlayerLevel
     };
 
-    // 업적 전용 보상 행동
+    // ?�적 ?�용 보상 ?�동
     private BaseRewardAction[] rewards;
 
-    // 진행중인 업적 및 퀘스트
+    // 진행중인 ?�적 �??�스??
     public Queue<BaseAchievement> ProgressQuest { get; private set; }
     public BaseAchievement currentQuest { get; private set; }
 
-    [Header("누적되는 카운터")] [SerializeField] private EAchievementType[] stackCounterList;
+    [SerializeField] private EAchievementType[] stackCounterList;
 
-    [Header("미리 만드는 카운터")] [SerializeField]
-    private EAchievementType[] preCounterList;
+    [SerializeField] private EAchievementType[] preCounterList;
+    #endregion
 
-    private void Awake()
-    {
+    private void Awake() {
         instance = this;
         counterDictionary = new Dictionary<EAchievementType, AchievementCounter>();
         ProgressQuest = new Queue<BaseAchievement>();
         stoppedCounter = new HashSet<AchievementCounter>();
     }
 
-    public void InitQuestManager()
-    {
+    public void InitQuestManager() {
         InitCounter();
         Debug.Assert(quests != null);
         AddToProgressQueue(quests);
@@ -63,11 +61,8 @@ public class QuestManager : MonoBehaviour
         Load();
     }
 
-    private void OnApplicationPause(bool pauseStatus)
-    {
-        // TODO 이거 너무 길어서 잘리는 듯.
-        if (pauseStatus)
-        {
+    private void OnApplicationPause(bool pauseStatus) {
+        if (pauseStatus) {
             foreach (var (type, counter) in counterDictionary)
                 counter.Save();
             foreach (var quest in repeatQuest)
@@ -75,15 +70,13 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    public void Load()
-    {
+    public void Load() {
         var id = DataManager.Instance.Load<string>($"{nameof(currentQuest)}_{nameof(currentQuest.achievementID)}",
             "init");
         var count = DataManager.Instance.Load($"{nameof(currentQuest)}_{nameof(currentQuest.count)}", 0);
         currentQuest = ProgressQuest.Dequeue();
 
-        if (id == "init")
-        {
+        if (id == "init") {
             SaveCurrentQuestID();
             SubscribeCounter(currentQuest);
             var ui = UIManager.instance.TryGetUI<UIQuestBar>();
@@ -91,25 +84,21 @@ public class QuestManager : MonoBehaviour
 #if !UNITY_EDITOR
             Firebase.Analytics.FirebaseAnalytics.LogEvent($"current_quest_{(currentQuest.GetID())}");
 #endif
-            // 처음 퀘스트는 퀘스트바를 클릭하는 것으로 클리어
             ui.ShowQuestRoot(currentQuest.type);
             return;
         }
 
-        if (id == "none")
-        {
+        if (id == "none") {
             currentQuest = new BaseAchievement("none", "none", "none", EAchievementType.WeaponEquip);
             SaveCurrentQuestID();
             UIManager.instance.TryGetUI<UIQuestBar>().CloseUI();
             return;
         }
 
-        while (id != currentQuest.achievementID)
-        {
+        while (id != currentQuest.achievementID) {
             if (ProgressQuest.Count > 0)
                 currentQuest = ProgressQuest.Dequeue();
-            else
-            {
+            else {
                 Debug.Assert(true, "Quest not found");
                 currentQuest = new BaseAchievement("none", "none", "none", EAchievementType.WeaponEquip);
                 SaveCurrentQuestID();
@@ -119,34 +108,28 @@ public class QuestManager : MonoBehaviour
         }
 
         currentQuest.count = count;
-        if (currentQuest.GetGoal() <= count)
-        {
+        if (currentQuest.GetGoal() <= count) {
             currentQuest.CompleteAchievement();
         }
-        else
-        {
+        else {
             SubscribeCounter(currentQuest);
         }
 
         UIManager.instance.TryGetUI<UIQuestBar>().ShowUI();
     }
 
-    public void SaveCurrentQuestID()
-    {
+    public void SaveCurrentQuestID() {
         DataManager.Instance.Save($"{nameof(currentQuest)}_{nameof(currentQuest.achievementID)}",
             currentQuest.achievementID);
     }
 
-    private void SaveCurrentCount()
-    {
+    private void SaveCurrentCount() {
         DataManager.Instance.Save($"{nameof(currentQuest)}_{nameof(currentQuest.count)}", currentQuest.count);
     }
 
-    public void MoveToNextQuest()
-    {
+    public void MoveToNextQuest() {
         UIManager.instance.TryGetUI<UIQuestBar>().CloseUI();
-        if (ProgressQuest.Count == 0)
-        {
+        if (ProgressQuest.Count == 0) {
             foreach (var quest in repeatQuest)
                 ProgressQuest.Enqueue(quest);
         }
@@ -162,22 +145,17 @@ public class QuestManager : MonoBehaviour
 #endif
     }
 
-    private void InitCounter()
-    {
-        foreach (var type in preCounterList)
-        {
-            var counter = new AchievementCounter
-            {
+    private void InitCounter() {
+        foreach (var type in preCounterList) {
+            var counter = new AchievementCounter {
                 achievementType = type
             };
             InitializeCounter(counter);
             counterDictionary.Add(counter.achievementType, counter);
         }
 
-        foreach (var type in stackCounterList)
-        {
-            var counter = new AchievementCounter
-            {
+        foreach (var type in stackCounterList) {
+            var counter = new AchievementCounter {
                 achievementType = type
             };
             InitializeCounter(counter);
@@ -185,38 +163,29 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    private void AddToProgressQueue<T>(T[] quest) where T : BaseAchievement
-    {
-        for (int i = 0; i < quest.Length; ++i)
-        {
+    private void AddToProgressQueue<T>(T[] quest) where T : BaseAchievement {
+        for (int i = 0; i < quest.Length; ++i) {
             AddToProgressQueue(quest[i]);
         }
     }
 
-    private void AddToProgressQueue(BaseAchievement quest)
-    {
+    private void AddToProgressQueue(BaseAchievement quest) {
         quest.InitializeInfo(this);
         quest.Load();
 
-        if (quest.isRewarded) return;
+        if (quest.isRewarded)
+            return;
         ProgressQuest.Enqueue(quest);
     }
 
-    /// <summary>
-    /// 카운터를 구독한다.
-    /// </summary>
-    /// <param name="achievement">카운터를 구독할 업적</param>
-    public void SubscribeCounter(BaseAchievement achievement)
-    {
+    public void SubscribeCounter(BaseAchievement achievement) {
         AchievementCounter counter;
-        if (counterDictionary.TryGetValue(achievement.type, out counter))
-        {
+        if (counterDictionary.TryGetValue(achievement.type, out counter)) {
             counter.onCounter += achievement.UpdateCounter;
             ++counter.Watcher;
             achievement.InitCount();
         }
-        else
-        {
+        else {
             counter = new AchievementCounter { achievementType = achievement.type };
             InitializeCounter(counter);
             counterDictionary.Add(counter.achievementType, counter);
@@ -227,53 +196,38 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 카운터 구독을 취소한다.
-    /// </summary>
-    /// <param name="achievement">카운터를 구독하는 업적</param>
-    public void UnsubscribeCounter(BaseAchievement achievement)
-    {
-        // Debug.Assert(counterDictionary.ContainsKey(achievement.type), "등록하지 않은 카운터에 등록 취소하려 합니다.");
-        if (!counterDictionary.ContainsKey(achievement.type)) return;
+    public void UnsubscribeCounter(BaseAchievement achievement) {
+        if (!counterDictionary.ContainsKey(achievement.type))
+            return;
 
         counterDictionary[achievement.type].onCounter -= achievement.UpdateCounter;
         --counterDictionary[achievement.type].Watcher;
 
-        // 일부 항목은 카운터가 등록 취소되면 삭제하는 것으로.
-        // if (achievement.type >= 0 && (int)achievement.type < 5)
-        //     RemoveCounter(achievement.type);
-        // if (achievement.type is EAchievementType.UseAutoSkill or EAchievementType.ClickQuestBar
-        //     or EAchievementType.WeaponCompositeCount or EAchievementType.ArmorCompositeCount)
-        //     RemoveCounter(achievement.type);
-
-        if (!stackCounterList.Contains(achievement.type)) RemoveCounter(achievement.type);
+        if (!stackCounterList.Contains(achievement.type))
+            RemoveCounter(achievement.type);
     }
 
-    private bool RemoveCounter(EAchievementType type)
-    {
-        if (!counterDictionary.ContainsKey(type)) return false;
-        if (counterDictionary[type].Watcher == 0)
-        {
-            // event에 등록된 메소드 지우기
+    private bool RemoveCounter(EAchievementType type) {
+        if (!counterDictionary.ContainsKey(type))
+            return false;
+        if (counterDictionary[type].Watcher == 0) {
             StopCounter(type);
             counterDictionary.Remove(type, out AchievementCounter counter);
             return true;
         }
-        else
-        {
-            // Debug.LogWarning($"{counterDictionary[type].watcher}개의 관찰자가 남은 카운터를 삭제하려고 합니다.");
+        else {
             return false;
         }
     }
 
-    public void StopCounter(EAchievementType type)
-    {
-        if (!counterDictionary.ContainsKey(type)) return;
+    public void StopCounter(EAchievementType type) {
+        if (!counterDictionary.ContainsKey(type))
+            return;
         var counter = counterDictionary[type];
-        if (!stoppedCounter.Add(counter)) return;
+        if (!stoppedCounter.Add(counter))
+            return;
 
-        switch (counter.achievementType)
-        {
+        switch (counter.achievementType) {
             case EAchievementType.WeaponEquip:
                 PlayerManager.instance.onEquipItem -= counter.CountWeaponEquip;
                 break;
@@ -350,25 +304,23 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    public void RestartCounter(EAchievementType type)
-    {
-        if (!counterDictionary.ContainsKey(type)) return;
+    public void RestartCounter(EAchievementType type) {
+        if (!counterDictionary.ContainsKey(type))
+            return;
         var counter = counterDictionary[type];
-        if (!stoppedCounter.Remove(counter)) return;
+        if (!stoppedCounter.Remove(counter))
+            return;
 
-        switch (counter.achievementType)
-        {
+        switch (counter.achievementType) {
             case EAchievementType.KillCount:
                 StageManager.instance.OnMonsterKill += counter.CountPerInvoke;
                 break;
         }
     }
 
-    private void InitializeCounter(AchievementCounter counter)
-    {
+    private void InitializeCounter(AchievementCounter counter) {
         int initValue = 0;
-        switch (counter.achievementType)
-        {
+        switch (counter.achievementType) {
             case EAchievementType.WeaponEquip:
                 PlayerManager.instance.onEquipItem += counter.CountWeaponEquip;
                 break;
@@ -469,15 +421,9 @@ public class QuestManager : MonoBehaviour
         counter.Load(initValue);
     }
 
-    /// <summary>
-    /// 보상 행동들을 각 타입에 맞는 보상행동으로 연결하고, 초기화한다. ERewardType이 무조건 전부 있어야한다!!
-    /// </summary>
-    /// <returns>초기화된 보상행동들</returns>
-    private BaseRewardAction[] InitRewardActions()
-    {
+    private BaseRewardAction[] InitRewardActions() {
         BaseRewardAction[] reward = new BaseRewardAction[Enum.GetNames(typeof(EQuestRewardType)).Length];
-        for (int i = 0; i < reward.Length; ++i)
-        {
+        for (int i = 0; i < reward.Length; ++i) {
             reward[i] = new BaseRewardAction();
             reward[i].InitializeReward((EQuestRewardType)i);
         }
@@ -485,37 +431,21 @@ public class QuestManager : MonoBehaviour
         return reward;
     }
 
-    /// <summary>
-    /// 해당 카운터에서 체크중인 값을 가져온다.
-    /// </summary>
-    /// <param name="type">카운터 타입</param>
-    /// <returns>해당 카운터에서 체크중인 값</returns>
-    public int GetCheckerCount(EAchievementType type)
-    {
+    public int GetCheckerCount(EAchievementType type) {
         return counterDictionary[type].count;
     }
 
-    public AchievementCounter GetChecker(EAchievementType type)
-    {
+    public AchievementCounter GetChecker(EAchievementType type) {
         return counterDictionary[type];
     }
 
-    /// <summary>
-    /// 해당 타입의 보상을 주어진 만큼 지급한다.
-    /// </summary>
-    /// <param name="type">보상타입</param>
-    /// <param name="amount">지급량</param>
-    /// <returns></returns>
-    public bool GiveReward(EQuestRewardType type, int amount)
-    {
-        Debug.Assert(rewards.Length > (int)type, "정의하지 않은 ERewardType값을 사용하려고 합니다.");
+    public bool GiveReward(EQuestRewardType type, int amount) {
+        Debug.Assert(rewards.Length > (int)type, "?�의?��? ?��? ERewardType값을 ?�용?�려�??�니??");
         return rewards[(int)type].GetReward(amount);
     }
 
-    public bool TryClearCurrentQuest()
-    {
-        if (currentQuest.isComplete)
-        {
+    public bool TryClearCurrentQuest() {
+        if (currentQuest.isComplete) {
             currentQuest.GetReward();
 
             UIManager.instance.TryGetUI<UIRewardPanel>()?.ShowUI((ECurrencyType)currentQuest.GetRewardType(),
@@ -524,51 +454,42 @@ public class QuestManager : MonoBehaviour
 
             return true;
         }
-        else
-        {
-            // show user to do quest
+        else {
             return false;
         }
     }
 }
 
 [Serializable]
-public class AchievementCounter
-{
+public class AchievementCounter {
     public EAchievementType achievementType;
     public int count { get; private set; }
     public event Action<int> onCounter;
     public int Watcher { get; set; } = 0;
 
-    public void CountPlus(int value)
-    {
-        if (value > 0)
-        {
+    public void CountPlus(int value) {
+        if (value > 0) {
             count += value;
             onCounter?.Invoke(value);
         }
     }
 
-    public void CountPerInvoke<T0>(T0 value0)
-    {
+    public void CountPerInvoke<T0>(T0 value0) {
         count += 1;
         onCounter?.Invoke(count);
     }
 
-    public void CountPerInvoke<T0, T1>(T0 value0, T1 value1)
-    {
+    public void CountPerInvoke<T0, T1>(T0 value0, T1 value1) {
         count += 1;
         onCounter?.Invoke(count);
     }
 
-    public void CountSetAs(int value)
-    {
+    public void CountSetAs(int value) {
         count = value;
         onCounter?.Invoke(count);
     }
 
-    public void CountSetAs(BigInteger value)
-    {
+    public void CountSetAs(BigInteger value) {
         if (value > int.MaxValue)
             count = int.MaxValue;
         else
@@ -576,31 +497,26 @@ public class AchievementCounter
         CountSetAs(count);
     }
 
-    public void CountOnce()
-    {
+    public void CountOnce() {
         count = 1;
         onCounter?.Invoke(count);
     }
 
-    public void CountOnce<T0>(T0 value1)
-    {
+    public void CountOnce<T0>(T0 value1) {
         count = 1;
         onCounter?.Invoke(count);
     }
 
-    public void CountOnce<T0, T1>(T0 value1, T1 value2)
-    {
+    public void CountOnce<T0, T1>(T0 value1, T1 value2) {
         count = 1;
         onCounter?.Invoke(count);
     }
 
-    public void Save()
-    {
+    public void Save() {
         DataManager.Instance.Save<int>($"{nameof(AchievementCounter)}_{achievementType.ToString()}", count);
     }
 
-    public void Load(int initValue = 0)
-    {
+    public void Load(int initValue = 0) {
         if (achievementType
             is EAchievementType.WeaponEquip
             or EAchievementType.ArmorEquip
@@ -613,20 +529,18 @@ public class AchievementCounter
             count = initValue;
     }
 
-    public void CountWeaponEquip(Equipment from, Equipment to)
-    {
-        if (to.type == EEquipmentType.Weapon) CountOnce();
+    public void CountWeaponEquip(Equipment from, Equipment to) {
+        if (to.type == EEquipmentType.Weapon)
+            CountOnce();
     }
 
-    public void CountArmorEquip(Equipment from, Equipment to)
-    {
-        if (to.type == EEquipmentType.Armor) CountOnce();
+    public void CountArmorEquip(Equipment from, Equipment to) {
+        if (to.type == EEquipmentType.Armor)
+            CountOnce();
     }
 
-    public void CountSetAsStatus(EStatusType type, int level)
-    {
-        switch (type, achievementType)
-        {
+    public void CountSetAsStatus(EStatusType type, int level) {
+        switch (type, achievementType) {
             case (EStatusType.ATK, EAchievementType.AttackUpgradeCount):
             case (EStatusType.HP, EAchievementType.HealthUpgradeCount):
             case (EStatusType.ATK, EAchievementType.LightningGem):
@@ -644,20 +558,17 @@ public class AchievementCounter
 
 #if UNITY_EDITOR
 [CustomEditor(typeof(QuestManager))]
-public class CustomEditorQuestManaver : Editor
-{
+public class CustomEditorQuestManaver : Editor {
     private TextAsset csvFile1;
     private TextAsset csvFile2;
 
-    public override void OnInspectorGUI()
-    {
+    public override void OnInspectorGUI() {
         base.OnInspectorGUI();
         EditorGUILayout.BeginHorizontal();
 
 
-        csvFile1 = EditorGUILayout.ObjectField("단일 퀘스트 CSV File", csvFile1, typeof(TextAsset), true) as TextAsset;
-        if (GUILayout.Button("Load QuestData from CSV"))
-        {
+        csvFile1 = EditorGUILayout.ObjectField("?�일 ?�스??CSV File", csvFile1, typeof(TextAsset), true) as TextAsset;
+        if (GUILayout.Button("Load QuestData from CSV")) {
             LoadGuideQuestFromCSV(csvFile1);
         }
 
@@ -665,26 +576,23 @@ public class CustomEditorQuestManaver : Editor
 
         EditorGUILayout.BeginHorizontal();
 
-        csvFile2 = EditorGUILayout.ObjectField("반복 퀘스트 CSV File", csvFile2, typeof(TextAsset), true) as TextAsset;
-        if (GUILayout.Button("Load QuestData from CSV"))
-        {
+        csvFile2 = EditorGUILayout.ObjectField("반복 ?�스??CSV File", csvFile2, typeof(TextAsset), true) as TextAsset;
+        if (GUILayout.Button("Load QuestData from CSV")) {
             LoadLevelQuestFromCSV(csvFile2);
         }
 
         EditorGUILayout.EndHorizontal();
     }
 
-    private void LoadGuideQuestFromCSV(TextAsset csv)
-    {
+    private void LoadGuideQuestFromCSV(TextAsset csv) {
         List<StackAchievement> onlyoneQuests = new List<StackAchievement>();
 
         string[] lines = csv.text.Split('\n');
 
-        for (int i = 1; i < lines.Length; i++) // 첫 번째 줄(헤더) 건너뛰기
+        for (int i = 1; i < lines.Length; i++) // �?번째 �??�더) 건너?�기
         {
             string line = lines[i];
-            if (!string.IsNullOrWhiteSpace(line))
-            {
+            if (!string.IsNullOrWhiteSpace(line)) {
                 string[] fields = line.Split(',');
 
                 bool isSuccess = false;
@@ -696,40 +604,35 @@ public class CustomEditorQuestManaver : Editor
 
                 str = fields[3].Trim();
                 isSuccess = int.TryParse(str, out int type);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 3 => {str}");
                     continue;
                 }
 
                 str = fields[4].Trim();
                 isSuccess = int.TryParse(str, out int goal);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 4 => {str}");
                     continue;
                 }
 
                 str = fields[5].Trim();
                 isSuccess = int.TryParse(str, out int descGoal);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 5 => {str}");
                     continue;
                 }
 
                 str = fields[6].Trim();
                 isSuccess = int.TryParse(str, out int rewardType);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 5 => {str}");
                     continue;
                 }
 
                 str = fields[7].Trim();
                 isSuccess = int.TryParse(str, out int reward);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 6 => {str}");
                     continue;
                 }
@@ -746,17 +649,14 @@ public class CustomEditorQuestManaver : Editor
         EditorUtility.SetDirty(target);
     }
 
-    private void LoadLevelQuestFromCSV(TextAsset csv)
-    {
+    private void LoadLevelQuestFromCSV(TextAsset csv) {
         List<RepeatAchievement> repeatQuests = new List<RepeatAchievement>();
 
         string[] lines = csv.text.Split('\n');
 
-        for (int i = 1; i < lines.Length; i++) // 첫 번째 줄(헤더) 건너뛰기
-        {
+        for (int i = 1; i < lines.Length; i++) {
             string line = lines[i];
-            if (!string.IsNullOrWhiteSpace(line))
-            {
+            if (!string.IsNullOrWhiteSpace(line)) {
                 string[] fields = line.Split(',');
 
                 bool isSuccess = false;
@@ -768,8 +668,7 @@ public class CustomEditorQuestManaver : Editor
 
                 str = fields[3].Trim();
                 isSuccess = int.TryParse(str, out int type);
-                if (!isSuccess)
-                {
+                if (!isSuccess) {
                     Debug.LogWarning($"Failed 3 => {str}");
                     continue;
                 }
@@ -777,8 +676,7 @@ public class CustomEditorQuestManaver : Editor
                 str = fields[4].Trim();
                 string[] levelStr = str.Split(' ');
                 List<int> level = new List<int>();
-                foreach (var item in levelStr)
-                {
+                foreach (var item in levelStr) {
                     if (int.TryParse(item, out int ret))
                         level.Add(ret);
                 }
@@ -786,8 +684,7 @@ public class CustomEditorQuestManaver : Editor
                 str = fields[5].Trim();
                 string[] goalStr = str.Split(' ');
                 List<int> goal = new List<int>();
-                foreach (var item in goalStr)
-                {
+                foreach (var item in goalStr) {
                     if (int.TryParse(item, out int ret))
                         goal.Add(ret);
                 }
@@ -798,14 +695,12 @@ public class CustomEditorQuestManaver : Editor
                 str = fields[7].Trim();
                 string[] rewardStr = str.Split(' ');
                 List<int> rewardAmount = new List<int>();
-                foreach (var item in rewardStr)
-                {
+                foreach (var item in rewardStr) {
                     if (int.TryParse(item, out int ret))
                         rewardAmount.Add(ret);
                 }
 
-                if (level.Count != goal.Count || level.Count != rewardAmount.Count)
-                {
+                if (level.Count != goal.Count || level.Count != rewardAmount.Count) {
                     Debug.LogWarning($"count doesn't match. => line{i}");
                     continue;
                 }

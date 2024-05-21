@@ -6,10 +6,9 @@ using Keiwando.BigInteger;
 using UnityEngine;
 using Utils;
 
-public class MessageUIManager : MonoBehaviour
-{
+public class MessageUIManager : MonoBehaviour {
     public static MessageUIManager instance;
-
+    #region 생략
     [Header("데미지 표시 관련")]
     [SerializeField] private RectTransform damageCanvas;
     [SerializeField] private UIDamage damagePrefab;
@@ -37,13 +36,11 @@ public class MessageUIManager : MonoBehaviour
 
     private CustomPool<UIObtainMessage> obtainMessagePool;
 
-    private void Awake()
-    {
+    private void Awake() {
         instance = this;
     }
-
-    public void InitPopMessageUImanager()
-    {
+    #endregion
+    public void InitPopMessageUImanager() {
         instance = this;
         damagePool = EasyUIPooling.MakePool(damagePrefab, damageCanvas,
             x => x.actOnCallback += () => damagePool.Release(x),
@@ -62,25 +59,15 @@ public class MessageUIManager : MonoBehaviour
 
         messageQueue = new Queue<string>();
 
-        // PlayerManager.instance.onEquipItem += ShowPower;
-
-        // PlayerManager.instance.status.onStatusChangeFloat += ShowPower;
-        // PlayerManager.instance.status.onStatusChangeBigInteger +=
-        // ShowPower;
-
         StartCoroutine(ShowMessage());
     }
 
-    private IEnumerator ShowMessage()
-    {
-        float elaspedTime =.0f;
-        while (true)
-        {
+    private IEnumerator ShowMessage() {
+        float elaspedTime = .0f;
+        while (true) {
             elaspedTime += Time.deltaTime;
-            if (elaspedTime > fixedTime)
-            {
-                if (messageQueue.TryDequeue(out string value))
-                {
+            if (elaspedTime > fixedTime) {
+                if (messageQueue.TryDequeue(out string value)) {
                     ShowCenterMessage(value);
                     elaspedTime = .0f;
                 }
@@ -88,134 +75,42 @@ public class MessageUIManager : MonoBehaviour
             yield return null;
         }
     }
-    
-    // private void ShowPower(EStatusType type, BigInteger current, BigInteger diff)
-    // {
-    //     if (diff == 0) return;
-    //     
-    //     StringBuilder sb = new StringBuilder();
-    //
-    //     sb.Append(Strings.statusTypeToKor[(int)type] + " ");
-    //     sb.Append(current.ChangeToShort());
-    //     sb.Append(" (");
-    //     if (diff < 0)
-    //     {
-    //         sb.Append(CustomText.SetColor($"\u25b2 {BigInteger.Abs(diff).ChangeToShort()}", Color.red));
-    //     }
-    //     else
-    //     {
-    //         sb.Append(CustomText.SetColor($"\u25bc {diff.ChangeToShort()}", Color.blue));
-    //     }
-    //
-    //     sb.Append(")");
-    //     
-    //     // ShowCenterMessage(sb.ToString());
-    //     messageQueue.Enqueue(sb.ToString());
-    // }
-    
-    // private void ShowPower(EStatusType type, float current, float diff)
-    // {
-    //     if (diff == 0) return;
-    //     
-    //     StringBuilder sb = new StringBuilder();
-    //
-    //     sb.Append(Strings.statusTypeToKor[(int)type] + " ");
-    //     sb.Append((current * 100).ToString("F2"));
-    //     sb.Append("% (");
-    //     if (diff < 0)
-    //     {
-    //         sb.Append(CustomText.SetColor($"\u25b2 {(Mathf.Abs(diff) * 100):F2}%", Color.red));
-    //     }
-    //     else
-    //     {
-    //         sb.Append(CustomText.SetColor($"\u25bc {(diff*100):F2}%", Color.blue));
-    //     }
-    //
-    //     sb.Append(")");
-    //     
-    //     // ShowCenterMessage(sb.ToString());
-    //     messageQueue.Enqueue(sb.ToString());
-    // }
 
-    // 장비 장착, 장비 합성, 성장, 각성에서 사용
-    public void ShowPower(BigInteger current, BigInteger diff)
-    {
-        if (diff == 0) return;
+    public void ShowPower(BigInteger current, BigInteger diff) {
+        if (diff == 0)
+            return;
         StringBuilder sb = new StringBuilder();
 
         sb.Append("전투력 ");
         sb.Append((current).ChangeToShort());
         sb.Append(" (");
-        if (diff < 0)
-        {
+        if (diff < 0) {
             sb.Append(CustomText.SetColor($"\u25bc {BigInteger.Abs(diff).ChangeToShort()}", Color.cyan));
         }
-        else
-        {
+        else {
             sb.Append(CustomText.SetColor($"\u25b2 {diff.ChangeToShort()}", Color.red));
         }
         sb.Append(")");
-        
+
         ShowCenterMessage(sb.ToString());
     }
 
-    // private void ShowPower(Equipment from, Equipment to)
-    // {
-    //     if (from.IsEquiped) return;
-    //
-    //     StringBuilder sb = new StringBuilder();
-    //     BigInteger dif;
-    //     switch (from.type)
-    //     {
-    //         case EEquipmentType.Weapon:
-    //             {
-    //                 dif = to.equippedEffect - from.equippedEffect;
-    //                 sb.Append("공격력 (");
-    //                 break;
-    //             }
-    //         case EEquipmentType.Armor:
-    //             {
-    //                 dif = to.equippedEffect - from.equippedEffect;
-    //                 sb.Append("체력 (");
-    //                 break;
-    //             }
-    //         default:
-    //             dif = new BigInteger(0);
-    //             break;
-    //     }
-    //     
-    //     if (dif > 0)
-    //         sb.Append(CustomText.SetColor("\u25b2"+dif.ChangeToShort(), Color.red));
-    //     else
-    //         sb.Append(CustomText.SetColor("\u25bc"+BigInteger.Abs(dif).ChangeToShort(), Color.blue));
-    //
-    //     sb.Append(")");
-    //     ShowCenterMessage(sb.ToString());
-    // }
-
-    public void ShowDamage(Vector3 position, BigInteger damage, bool isCrit = false)
-    {
+    public void ShowDamage(Vector3 position, BigInteger damage, bool isCrit = false) {
         var obj = damagePool.Get();
-        obj.transform.SetAsLastSibling();
         obj.ShowUI(position, damage, isCrit);
     }
 
-    public void ShowCenterMessage(string message)
-    {
+    public void ShowCenterMessage(string message) {
         var msg = messagePool.Get();
-        msg.transform.SetAsLastSibling();
         msg.ShowUI(message, movingUpTime, fadeOutTime, speed);
     }
 
-    public void ShowObtainMessage(ECurrencyType currencyType, string amount)
-    {
+    public void ShowObtainMessage(ECurrencyType currencyType, string amount) {
         var obj = GetObtainMessage();
-        obj.transform.SetAsLastSibling();
         obj.ShowUI(currencyType, amount, obtainShowTime, obtainFadeOutTime);
     }
 
-    private UIObtainMessage GetObtainMessage()
-    {
+    private UIObtainMessage GetObtainMessage() {
         var obj = obtainMessagePool.Get();
         if (obj.gameObject.activeInHierarchy)
             obj.transform.SetAsLastSibling();

@@ -11,13 +11,13 @@ using UnityEditor;
 using UnityEngine;
 using Utils;
 
-public class StageManager : MonoBehaviour
-{
+public class StageManager : MonoBehaviour {
     public static StageManager instance;
+    #region �ʵ� ����
     public float clearPanelTime = 2f;
 
     private PlayerData player => PlayerManager.instance.player;
-    
+
     private EStageState state;
 
     private MonsterSpawner monsterSpawner;
@@ -61,20 +61,16 @@ public class StageManager : MonoBehaviour
 
     private bool autoBossChallenge;
 
-    public bool AutoBossChallenge
-    {
+    public bool AutoBossChallenge {
         get { return autoBossChallenge; }
         set { autoBossChallenge = value; }
     }
-
-    private void Awake()
-    {
+    #endregion
+    #region �ʱ�ȭ
+    private void Awake() {
         instance = this;
     }
-
-    public void InitStageManager()
-    {
-        // InitCollections();
+    public void InitStageManager() {
         InitMonsterSpawner();
         LoadDatas();
         UpdateCurrentStageData();
@@ -86,48 +82,27 @@ public class StageManager : MonoBehaviour
         var ui = UIManager.instance.TryGetUI<UIStageBar>();
         ui.ShowNormalStageUI(stageName);
 
-        // var ui = UIManager.instance.TryGetUI<UIStageBar>();
-        // OnBossHPChange += ui.UpdateHealth;
-        // OnTimerChanged += ui.UpdateTimer;
         OnMonsterKill += player.health.HealPerKill;
         player.controller.onDeathStart += UIManager.instance.TryGetUI<UIStageFail>().ShowUI;
     }
 
-    // private void InitCollections()
-    // {
-    //     difficultyDic = new Dictionary<Defines.EStageDifficulty, string>();
-    //
-    //     difficultyDic[Defines.EStageDifficulty.Easy] = Strings.StageDifficulties.EASY;
-    //     difficultyDic[Defines.EStageDifficulty.Normal] = Strings.StageDifficulties.NORMAL;
-    //     difficultyDic[Defines.EStageDifficulty.Hard] = Strings.StageDifficulties.HARD;
-    // }
-
-    private void InitMonsterSpawner()
-    {
+    private void InitMonsterSpawner() {
         MonsterSpawner obj = Resources.Load<MonsterSpawner>("Prefabs/MonsterSpawner");
         monsterSpawner = Instantiate(obj);
     }
 
-    private void LoadDatas()
-    {
-        // stageDatas = Resources.LoadAll<StageDataSO>("ScriptableObjects/StageDataSO");
-
-        //Temp logic
-        // currentDifficulty = Defines.EStageDifficulty.Easy;
+    private void LoadDatas() {
         Load();
         currentNumber = maxClearNumber;
         currentSection = maxClearSection;
         currentStage = maxClearStage;
 
-        foreach (var stage in stageDatas)
-        {
-            foreach (var reward in stage.BasicMonstersReward)
-            {
+        foreach (var stage in stageDatas) {
+            foreach (var reward in stage.BasicMonstersReward) {
                 reward.InitCurrentReward();
             }
 
-            foreach (var reward in stage.BossMonsterReward)
-            {
+            foreach (var reward in stage.BossMonsterReward) {
                 reward.InitCurrentReward();
             }
         }
@@ -135,12 +110,10 @@ public class StageManager : MonoBehaviour
         awakenDungeon.Load();
         goldDungeon.Load();
         enhanceDungeon.Load();
-        // goldDungeon.InitReward();
-        // awakenDungeon.InitReward();
     }
+    #endregion
 
-    private void UpdateCurrentStageData()
-    {
+    private void UpdateCurrentStageData() {
         state = Defines.EStageState.Normal;
         OnStateChange?.Invoke(state);
         ClearSubscribe();
@@ -156,115 +129,89 @@ public class StageManager : MonoBehaviour
 
         monsterSpawner.SetStageData(currentStageData);
 
-        // monsterSpawner.StartInfiniteGenerating();
-
         string stageName =
             $"{currentStageData.StageName} {(stageDatas.Length * (currentSection - 1) + currentStage + 1).ToString()}-{currentStageData.StageNumber.ToString()}";
-
-        // var ui = UIManager.instance.TryGetUI<UIStageBar>();
-        // ui.ShowNormalStageUI(stageName);
 
         OnStageChange?.Invoke(stageName);
         player.controller.onDeathStart += InitStageForResurrection;
     }
 
-    private void SetDungeonData(DungeonData data)
-    {
+    private void SetDungeonData(DungeonData data) {
         state = Defines.EStageState.Dungeon;
         OnStateChange?.Invoke(state);
         ClearSubscribe();
         monsterSpawner.ClearMonsters();
 
         string stageName = $"{data.dungeonSubName} {CustomText.SetColor($"Lv.{data.dungeonLevel}", EColorType.Green)}";
-        switch (data.dungeonType)
-        {
-            case EDungeonType.Gold:
-            {
-                // currentStageData = data.stageSO;
-                currentKillCount = 0;
-                goalKillCount = data.goalKillCount;
+        switch (data.dungeonType) {
+            case EDungeonType.Gold: {
+                    currentKillCount = 0;
+                    goalKillCount = data.goalKillCount;
 
-                monsterSpawner.SetDungeonData(data);
+                    monsterSpawner.SetDungeonData(data);
 
-                Destroy(currentMap);
-                currentMap = Instantiate(data.stageSO.Map);
+                    Destroy(currentMap);
+                    currentMap = Instantiate(data.stageSO.Map);
 
-                monsterSpawner.StartGoldDungeonGenerate();
+                    monsterSpawner.StartGoldDungeonGenerate();
 
-                var ui = UIManager.instance.TryGetUI<UIStageBar>();
-                ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull,
-                    EIconType.Clock);
-                OnMonsterKill += ui.UpdateHealth;
-                OnTimerChanged += ui.UpdateTimer;
-                // var init = Mathf.FloorToInt(data.goalTime);
-                // ui.InitDownSlider(init, init);
-                ui.InitUpSlider(data.goalKillCount, 0);
-                ui.InitDownSlider();
+                    var ui = UIManager.instance.TryGetUI<UIStageBar>();
+                    ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull,
+                        EIconType.Clock);
+                    OnMonsterKill += ui.UpdateHealth;
+                    OnTimerChanged += ui.UpdateTimer;
+                    ui.InitUpSlider(data.goalKillCount, 0);
+                    ui.InitDownSlider();
 
-                OnMonsterKill += SwitchToDungeonReward;
-                break;
-            }
-            case EDungeonType.Awaken:
-            {
-                monsterSpawner.SetDungeonData(data);
-                //
-                // monsterSpawner.StartAwakenDungeonGenerate();
-                Destroy(currentMap);
-                currentMap = Instantiate(data.stageSO.Map);
+                    OnMonsterKill += SwitchToDungeonReward;
+                    break;
+                }
+            case EDungeonType.Awaken: {
+                    monsterSpawner.SetDungeonData(data);
+                    Destroy(currentMap);
+                    currentMap = Instantiate(data.stageSO.Map);
 
-                currentBoss = monsterSpawner.InstantiateAwakenBoss(data);
-                currentBoss.controller.onDeathEnd += () => SwitchToReward(data);
+                    currentBoss = monsterSpawner.InstantiateAwakenBoss(data);
+                    currentBoss.controller.onDeathEnd += () => SwitchToReward(data);
 
-                var ui = UIManager.instance.TryGetUI<UIStageBar>();
-                ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull,
-                    EIconType.Clock);
+                    var ui = UIManager.instance.TryGetUI<UIStageBar>();
+                    ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull,
+                        EIconType.Clock);
 
-                // var init = Mathf.FloorToInt(data.goalTime);
-                // ui.InitDownSlider(init, init);
-                ui.InitUpSlider(100, 100);
-                ui.InitDownSlider();
+                    ui.InitUpSlider(100, 100);
+                    ui.InitDownSlider();
 
-                OnBossHPChange += ui.UpdateHealth;
-                OnTimerChanged += ui.UpdateTimer;
+                    OnBossHPChange += ui.UpdateHealth;
+                    OnTimerChanged += ui.UpdateTimer;
 
-                ManageBossCallback(true);
+                    ManageBossCallback(true);
 
-                // currentBoss.Idle();
-                break;
-            }
-            case EDungeonType.Enhance:
-            {
-                monsterSpawner.SetDungeonData(data);
+                    break;
+                }
+            case EDungeonType.Enhance: {
+                    monsterSpawner.SetDungeonData(data);
 
-                Destroy(currentMap);
-                currentMap = Instantiate(data.stageSO.Map);
-                
-                // monsterSpawner.StartGoldDungeonGenerate();
-                currentBoss = monsterSpawner.InstantiateAwakenBoss(data);
-                CameraController.SetFollow(currentBoss.gameObject);
-                currentBoss.controller.onDeathEnd += () => SwitchToReward(data);
-                
-                var ui = UIManager.instance.TryGetUI<UIStageBar>();
-                // ui.ShowProgressUI(EStageState.Dungeon, stageName, data.dungeonSubName, EIconType.Skull, EIconType.Clock);
-                ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull, EIconType.Clock);
-                
-                // OnMonsterKill += ui.UpdateHealth;
-                // OnTimerChanged += ui.UpdateTimer;
-                
-                // ui.InitUpSlider(data.goalKillCount, 0);
-                ui.InitUpSlider(100, 100);
-                ui.InitDownSlider();
-                
-                OnBossHPChange += ui.UpdateHealth;
-                OnTimerChanged += ui.UpdateTimer;
-                
-                ManageBossCallback(true);
+                    Destroy(currentMap);
+                    currentMap = Instantiate(data.stageSO.Map);
 
-                // OnMonsterKill += SwitchToDungeonReward;
-                // currentBoss.Idle();
-                currentBoss.controller.onDeathStart += () => CameraController.SetFollow(player.gameObject);
-                break;
-            }
+                    currentBoss = monsterSpawner.InstantiateAwakenBoss(data);
+                    CameraController.SetFollow(currentBoss.gameObject);
+                    currentBoss.controller.onDeathEnd += () => SwitchToReward(data);
+
+                    var ui = UIManager.instance.TryGetUI<UIStageBar>();
+                    ui.ShowProgressUI(EStageState.Dungeon, stageName, data.stageSO.StageName, EIconType.Skull, EIconType.Clock);
+
+                    ui.InitUpSlider(100, 100);
+                    ui.InitDownSlider();
+
+                    OnBossHPChange += ui.UpdateHealth;
+                    OnTimerChanged += ui.UpdateTimer;
+
+                    ManageBossCallback(true);
+
+                    currentBoss.controller.onDeathStart += () => CameraController.SetFollow(player.gameObject);
+                    break;
+                }
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -276,79 +223,71 @@ public class StageManager : MonoBehaviour
         player.controller.onDeathStart += InitDungeonForResurrection;
     }
 
-    public void AddKillCount()
-    {
+    public void AddKillCount() {
         currentKillCount++;
 
-        if (currentKillCount > goalKillCount)
-        {
+        if (currentKillCount > goalKillCount) {
             currentKillCount = goalKillCount;
-            // return;
         }
 
         OnMonsterKill?.Invoke(currentKillCount, goalKillCount);
     }
 
-    // public void SwitchToBossStage(int currentKill, int goalKill)
-    // {
-    //     if (currentKill == goalKill)
-    //     {
-    //         SwitchToBossStage();
-    //     }
-    // }
-
-    public void SwitchToNormalStage(int currentKill, int goalKill)
-    {
-        if (currentKill == goalKill) InitStage();
+    public void SwitchToNormalStage(int currentKill, int goalKill) {
+        if (currentKill == goalKill)
+            InitStage();
     }
 
-    public void SwitchToDungeonReward(int currentKill, int goalKill)
-    {
-        if (currentKill == goalKill) SwitchToReward(currentDungeon);
+    public void SwitchToDungeonReward(int currentKill, int goalKill) {
+        if (currentKill == goalKill)
+            SwitchToReward(currentDungeon);
     }
 
-    private void InitStage()
-    {
+    private void InitStage() {
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         interModeCoroutine = StartCoroutine(InitNormalState());
     }
 
-    private void InitStageForResurrection()
-    {
+    private void InitStageForResurrection() {
         AutoBossChallenge = false;
         UIManager.instance.TryGetUI<UIStageBar>().SetAutoBossWithoutNotify(false);
 
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         interModeCoroutine = StartCoroutine(InitPlayerResurrectionState());
     }
 
-    public void SwitchToBossStage()
-    {
-        if (state != EStageState.Normal) return;
+    public void SwitchToBossStage() {
+        if (state != EStageState.Normal)
+            return;
 
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         isOnTimer = true;
         interModeCoroutine = StartCoroutine(InitBossStage());
         timerCoroutine = StartCoroutine(Timer(currentStageData.BossTimeLimit, BossModeFailed));
     }
 
-    private void BossModeSuccess(MonsterData monster)
-    {
+    private void BossModeSuccess(MonsterData monster) {
         ManageBossCallback(false);
         SetBossModeValidity(false);
 
@@ -357,11 +296,9 @@ public class StageManager : MonoBehaviour
         currentKillCount = 0;
 
         ++currentNumber;
-        if (currentNumber > 20)
-        {
+        if (currentNumber > 20) {
             ++currentStage;
-            if (currentStage >= stageDatas.Length)
-            {
+            if (currentStage >= stageDatas.Length) {
                 currentStage = 0;
                 ++currentSection;
             }
@@ -371,72 +308,56 @@ public class StageManager : MonoBehaviour
 
         UpdateMaxStage(currentStage, currentSection, currentNumber);
 
-        // TODO 전투 결과창 보여주고, 보상 지급하기
         UIManager.instance.TryGetUI<UIStageClearPanel>().ShowUI(currentStageData.BossMonsterReward);
         foreach (var rewardData in currentStageData.BossMonsterReward)
             GameManager.instance.GetReward(rewardData.rewardType, rewardData.straightRewardAmount);
 
         StopCoroutine(timerCoroutine);
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
 
-        if (AutoBossChallenge)
-        {
+        if (AutoBossChallenge) {
             UpdateCurrentStageData();
 
             isOnTimer = true;
             interModeCoroutine = StartCoroutine(InitBossStage());
             timerCoroutine = StartCoroutine(Timer(currentStageData.BossTimeLimit, BossModeFailed));
         }
-        else
-        {
+        else {
             interModeCoroutine = StartCoroutine(InitNormalState());
         }
     }
 
-    private void BossModeFailed()
-    {
+    private void BossModeFailed() {
         UIManager.instance.TryGetUI<UIStageFail>().ShowUI();
 
         ManageBossCallback(false);
         SetBossModeValidity(true);
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
         interModeCoroutine = StartCoroutine(InitNormalState());
     }
 
-    private void ManageBossCallback(bool isAdding)
-    {
-        if (isAdding)
-        {
-            // currentBoss.dataController.GetData(Defines.EDataType.CurrentHealth).OnDataChange += UpdateBossHealth;
+    private void ManageBossCallback(bool isAdding) {
+        if (isAdding) {
             currentBoss.controller.onCurrentHPChange += UpdateBossCurrentHp;
         }
-        else
-        {
+        else {
             currentBoss.controller.onCurrentHPChange -= UpdateBossCurrentHp;
         }
     }
 
-    private void UpdateBossCurrentHp(BigInteger health, BigInteger max)
-    {
+    private void UpdateBossCurrentHp(BigInteger health, BigInteger max) {
         OnBossHPChange?.Invoke(health, max);
     }
 
-    private void SetBossModeValidity(bool isAvailable)
-    {
+    private void SetBossModeValidity(bool isAvailable) {
         isBossStageAvailable = isAvailable;
         OnBossStageValidityChange?.Invoke(isBossStageAvailable);
     }
 
-    // public void GetStageInfo()
-    // {
-    //     string stageName =
-    //         $"{difficultyDic[currentDifficulty]}  {currentStageData.StageSection} - {currentStageData.StageNumber}";
-    //     OnStageChange?.Invoke(stageName);
-    // }
-
-    IEnumerator EnterDungeon(DungeonData data)
-    {
+    IEnumerator EnterDungeon(DungeonData data) {
         state = Defines.EStageState.Inter;
         OnStateChange?.Invoke(state);
 
@@ -446,10 +367,8 @@ public class StageManager : MonoBehaviour
         QuestManager.instance.StopCounter(EAchievementType.KillCount);
         UIManager.instance.TryGetUI<UIQuestBar>().HideUI();
         SetDungeonData(data);
-        
-        // TODO 화면 어두워지게 만들기
-        switch (data.dungeonType)
-        {
+
+        switch (data.dungeonType) {
             case EDungeonType.Awaken:
             case EDungeonType.Gold:
                 yield return new WaitForSeconds(.5f);
@@ -460,12 +379,11 @@ public class StageManager : MonoBehaviour
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        
+
         player.Idle();
     }
 
-    IEnumerator InitNormalState(Action onSet = null)
-    {
+    IEnumerator InitNormalState(Action onSet = null) {
         state = Defines.EStageState.Inter;
         OnStateChange?.Invoke(state);
 
@@ -475,7 +393,6 @@ public class StageManager : MonoBehaviour
         QuestManager.instance.RestartCounter(EAchievementType.KillCount);
         UIManager.instance.TryGetUI<UIQuestBar>().DisplayUI();
 
-        // TODO 화면 어두워지게 만들기
         yield return new WaitForSeconds(.5f);
 
         onSet?.Invoke();
@@ -496,8 +413,7 @@ public class StageManager : MonoBehaviour
         player.Idle();
     }
 
-    IEnumerator InitPlayerResurrectionState()
-    {
+    IEnumerator InitPlayerResurrectionState() {
         state = Defines.EStageState.Inter;
         OnStateChange?.Invoke(state);
 
@@ -523,8 +439,7 @@ public class StageManager : MonoBehaviour
         player.Spawn();
     }
 
-    IEnumerator InitBossStage()
-    {
+    IEnumerator InitBossStage() {
         state = Defines.EStageState.Inter;
         OnStateChange?.Invoke(state);
 
@@ -547,7 +462,6 @@ public class StageManager : MonoBehaviour
         OnBossHPChange += ui.UpdateHealth;
         ui.InitUpSlider(ui.upSliderSize, ui.upSliderSize);
         ui.InitDownSlider();
-        // ui.InitDownSlider(currentStageData.BossTimeLimit, currentStageData.BossTimeLimit);
         OnTimerChanged += ui.UpdateTimer;
 
         ManageBossCallback(true);
@@ -564,21 +478,17 @@ public class StageManager : MonoBehaviour
         currentBoss.Idle();
     }
 
-    IEnumerator Timer(float limitTime, Action onFailed)
-    {
+    IEnumerator Timer(float limitTime, Action onFailed) {
         float t = limitTime;
 
         yield return new WaitForSeconds(.5f);
 
-        while (isOnTimer)
-        {
-            if (t > 0 && !player.IsDead)
-            {
+        while (isOnTimer) {
+            if (t > 0 && !player.IsDead) {
                 t -= Time.deltaTime;
                 OnTimerChanged?.Invoke(t, limitTime);
             }
-            else
-            {
+            else {
                 isOnTimer = false;
                 onFailed?.Invoke();
             }
@@ -587,11 +497,9 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    public GameObject TryGetTarget()
-    {
+    public GameObject TryGetTarget() {
         GameObject nearest = null;
-        foreach (var monster in monsterSpawner.monstersOnField)
-        {
+        foreach (var monster in monsterSpawner.monstersOnField) {
             if (monster.IsDead || !monster.gameObject.activeInHierarchy)
                 continue;
             if (ReferenceEquals(nearest, null) ||
@@ -603,39 +511,32 @@ public class StageManager : MonoBehaviour
         return nearest;
     }
 
-    public MonsterData[] GetTargets()
-    {
+    public MonsterData[] GetTargets() {
         var monsters = monsterSpawner.monstersOnField;
         List<MonsterData> targets = new List<MonsterData>();
-        foreach (var monster in monsters)
-        {
+        foreach (var monster in monsters) {
             if (!monster.IsDead && monster.gameObject.activeInHierarchy)
                 targets.Add(monster);
         }
 
-        // foreach (var monster in removeTarget)
-        // {
-        //     monsters.Remove(monster);
-        // }
-
         return targets.ToArray();
     }
 
-    public void InitToDungeon(DungeonData data)
-    {
+    public void InitToDungeon(DungeonData data) {
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         isOnTimer = true;
         interModeCoroutine = StartCoroutine(EnterDungeon(data));
         timerCoroutine = StartCoroutine(Timer(data.goalTime, DungeonFailed));
     }
 
-    private void DungeonFailed()
-    {
+    private void DungeonFailed() {
         CameraController.SetFollow(player.gameObject);
         // bottom button control
         var ui = UIManager.instance.TryGetUI<UIBottomMenuCtrl>();
@@ -646,12 +547,12 @@ public class StageManager : MonoBehaviour
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
         interModeCoroutine = StartCoroutine(InitNormalState());
     }
 
-    private void InitDungeonForResurrection()
-    {
+    private void InitDungeonForResurrection() {
         CameraController.SetFollow(player.gameObject);
         var ui = UIManager.instance.TryGetUI<UIBottomMenuCtrl>();
         ui.ActivateDungeonBtn(false);
@@ -661,28 +562,30 @@ public class StageManager : MonoBehaviour
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         interModeCoroutine = StartCoroutine(InitPlayerResurrectionState());
     }
 
-    public void RetireBoss()
-    {
+    public void RetireBoss() {
         CameraController.SetFollow(player.gameObject);
         AutoBossChallenge = false;
 
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         interModeCoroutine = StartCoroutine(InitNormalState());
     }
 
-    public void RetireDungeon()
-    {
+    public void RetireDungeon() {
         CameraController.SetFollow(player.gameObject);
         // TODO bottom button control
         var ui = UIManager.instance.TryGetUI<UIBottomMenuCtrl>();
@@ -691,18 +594,17 @@ public class StageManager : MonoBehaviour
         monsterSpawner.StopGenerating();
         monsterSpawner.ClearMonsters();
 
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
 
         // TODO Show dungeon UI
 
         interModeCoroutine = StartCoroutine(InitNormalState());
     }
 
-    public void ClearSubscribe()
-    {
-        // OnMonsterKill -= SwitchToBossStage;
-        // OnMonsterKill -= SwitchToNormalStage;
+    public void ClearSubscribe() {
         player.controller.onDeathStart -= InitStageForResurrection;
         player.controller.onDeathStart -= InitDungeonForResurrection;
         var ui = UIManager.instance.TryGetUI<UIStageBar>();
@@ -713,22 +615,22 @@ public class StageManager : MonoBehaviour
         player.controller.onDeathStart -= UIManager.instance.TryGetUI<UIStageFail>().ShowUI;
     }
 
-    public void SwitchToReward(DungeonData data)
-    {
+    public void SwitchToReward(DungeonData data) {
         isOnTimer = false;
         CurrencyManager.instance.SubtractCurrency(data.invitationType, 1);
 
         StopCoroutine(timerCoroutine);
-        if (interModeCoroutine != null) StopCoroutine(interModeCoroutine);
+        if (interModeCoroutine != null)
+            StopCoroutine(interModeCoroutine);
         interModeCoroutine = StartCoroutine(InitNormalState(() => OpenDungeonUI(data)));
 
         GameManager.instance.GetReward((EQuestRewardType)data.rewardType, data.GetTotalReward());
         CurrencyManager.instance.SaveCurrencies();
 
         var ui = UIManager.instance.TryGetUI<UIDungeonRewardPanel>();
-        string title = $"{Strings.currencyToKOR[(int)data.rewardType]} 획득";
+        string title = $"{Strings.currencyToKOR[(int)data.rewardType]} ?�득";
         string instruction =
-            $"{data.dungeonSubName} {CustomText.SetColor($"Lv.{data.dungeonLevel}", EColorType.Green)} 클리어!";
+            $"{data.dungeonSubName} {CustomText.SetColor($"Lv.{data.dungeonLevel}", EColorType.Green)} ?�리??";
         string rewardAmount = data.GetTotalReward().ChangeToShort();
         ui.ShowUI(title, instruction, CurrencyManager.instance.GetIcon((ECurrencyType)data.rewardType), rewardAmount,
             clearPanelTime);
@@ -736,8 +638,7 @@ public class StageManager : MonoBehaviour
         data.LevelUp();
     }
 
-    private void OpenDungeonUI(DungeonData data)
-    {
+    private void OpenDungeonUI(DungeonData data) {
         var ui1 = UIManager.instance.TryGetUI<UIDungeonPanel>();
         var ui2 = UIManager.instance.TryGetUI<UIDungeonElementPopup>();
 
@@ -748,10 +649,8 @@ public class StageManager : MonoBehaviour
         UIManager.instance.TryGetUI<UIBottomMenuCtrl>()?.ActivateDungeonBtn(false);
     }
 
-    private void UpdateMaxStage(int currentStage, int currentSection, int currentNumber)
-    {
-        if (currentStage > maxClearStage || currentSection > maxClearSection || currentNumber > maxClearNumber)
-        {
+    private void UpdateMaxStage(int currentStage, int currentSection, int currentNumber) {
+        if (currentStage > maxClearStage || currentSection > maxClearSection || currentNumber > maxClearNumber) {
             maxClearStage = currentStage;
             maxClearSection = currentSection;
             maxClearNumber = currentNumber;
@@ -760,26 +659,22 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    public void Save()
-    {
+    public void Save() {
         DataManager.Instance.Save(nameof(maxClearStage), maxClearStage);
         DataManager.Instance.Save(nameof(maxClearSection), maxClearSection);
         DataManager.Instance.Save(nameof(maxClearNumber), maxClearNumber);
     }
 
-    public void Load()
-    {
+    public void Load() {
         maxClearStage = DataManager.Instance.Load(nameof(maxClearStage), 0);
         maxClearSection = DataManager.Instance.Load(nameof(maxClearSection), 1);
         maxClearNumber = DataManager.Instance.Load(nameof(maxClearNumber), 1);
     }
 
-    public List<Reward> GetCurrentReward(int killCount)
-    {
+    public List<Reward> GetCurrentReward(int killCount) {
         List<Reward> ret = new List<Reward>();
         int targetLevel = 140 * (maxClearSection - 1) + 20 * (maxClearStage) + maxClearNumber;
-        foreach (var reward in stageDatas[currentStage].BasicMonstersReward)
-        {
+        foreach (var reward in stageDatas[currentStage].BasicMonstersReward) {
             reward.SetLevel(targetLevel);
             ret.Add(new Reward((ENormalRewardType)reward.rewardType, killCount * reward.straightRewardAmount));
         }

@@ -3,8 +3,7 @@ using Defines;
 using Keiwando.BigInteger;
 using UnityEngine.Serialization;
 
-public abstract class CurrentStatus
-{
+public abstract class CurrentStatus {
     public BigInteger currentAttack;
     public BigInteger currentMaxHealth;
     public float currentDamageReduction;
@@ -15,23 +14,21 @@ public abstract class CurrentStatus
     public BigInteger currentSkillDamage;
 }
 
-public class StatBase<T0, T1>
-{
+public class StatBase<T0, T1> {
     private EStatusType type;
-    
+
     private T0 baseData;
     private T0 perLevelData;
 
     private T0 addModifier;
     private T1 multiplyModifier;
-    
+
     private T1 finalData;
     public event Action<T1> onChange;
 }
 
 [Serializable]
-public class BaseStatus
-{
+public class BaseStatus {
     public int baseAttack;
     public int baseHealth;
     public float baseDamageReduction;
@@ -41,11 +38,9 @@ public class BaseStatus
     public int baseCritDamage;
     public float baseAttackSpeed;
     public float baseMovementSpeed;
-    
-    public static BaseStatus operator + (BaseStatus a, BaseStatus b)
-    {
-        BaseStatus ret = new BaseStatus
-        {
+
+    public static BaseStatus operator +(BaseStatus a, BaseStatus b) {
+        BaseStatus ret = new BaseStatus {
             baseAttack = a.baseAttack + b.baseAttack,
             baseHealth = a.baseHealth + b.baseHealth,
             baseDamageReduction = a.baseDamageReduction + b.baseDamageReduction,
@@ -61,8 +56,7 @@ public class BaseStatus
 }
 
 [Serializable]
-public struct TempBuffStatus
-{
+public struct TempBuffStatus {
     public int attackBuff;
     public int healthBuff;
     public float damageReductionBuff;
@@ -74,8 +68,7 @@ public struct TempBuffStatus
     public float movementSpeedBuff;
     public int skillDamageBuff;
 
-    public TempBuffStatus(int levelFrom1, TempBuffStatus status)
-    {
+    public TempBuffStatus(int levelFrom1, TempBuffStatus status) {
         attackBuff = status.attackBuff * levelFrom1;
         healthBuff = status.healthBuff * levelFrom1;
         damageReductionBuff = status.damageReductionBuff * levelFrom1;
@@ -89,8 +82,7 @@ public struct TempBuffStatus
     }
 
     public TempBuffStatus(int atk, int hp, int dmg_red, int mana, int mana_rec, int crit_ch,
-        int crit_dmg, int atk_spd, int mov_spd, int skill)
-    {
+        int crit_dmg, int atk_spd, int mov_spd, int skill) {
         attackBuff = atk;
         healthBuff = hp;
         damageReductionBuff = dmg_red / 100f;
@@ -103,8 +95,7 @@ public struct TempBuffStatus
         skillDamageBuff = skill;
     }
 
-    public static TempBuffStatus operator -(TempBuffStatus lh, TempBuffStatus rh)
-    {
+    public static TempBuffStatus operator -(TempBuffStatus lh, TempBuffStatus rh) {
         TempBuffStatus ret;
         ret.attackBuff = lh.attackBuff - rh.attackBuff;
         ret.healthBuff = lh.healthBuff - rh.healthBuff;
@@ -116,12 +107,11 @@ public struct TempBuffStatus
         ret.attackSpeedBuff = lh.attackSpeedBuff - rh.attackSpeedBuff;
         ret.movementSpeedBuff = lh.movementSpeedBuff - rh.movementSpeedBuff;
         ret.skillDamageBuff = lh.skillDamageBuff - rh.skillDamageBuff;
-        
+
         return ret;
     }
 
-    public static TempBuffStatus operator +(TempBuffStatus lh, TempBuffStatus rh)
-    {
+    public static TempBuffStatus operator +(TempBuffStatus lh, TempBuffStatus rh) {
         TempBuffStatus ret;
         ret.attackBuff = lh.attackBuff + rh.attackBuff;
         ret.healthBuff = lh.healthBuff + rh.healthBuff;
@@ -133,27 +123,24 @@ public struct TempBuffStatus
         ret.attackSpeedBuff = lh.attackSpeedBuff + rh.attackSpeedBuff;
         ret.movementSpeedBuff = lh.movementSpeedBuff + rh.movementSpeedBuff;
         ret.skillDamageBuff = lh.skillDamageBuff + rh.skillDamageBuff;
-        
+
         return ret;
     }
 }
 
 [Serializable]
-public struct PassiveStatus
-{
+public struct PassiveStatus {
     public EStatusType target;
     public int buff;
 
-    public PassiveStatus(EStatusType status, int buffAmount)
-    {
+    public PassiveStatus(EStatusType status, int buffAmount) {
         target = status;
         buff = buffAmount;
     }
 }
 
 [Serializable]
-public class BaseAwaken
-{
+public class BaseAwaken {
     public float baseAttackAmp;
     public float baseHealthAmp;
 
@@ -170,8 +157,7 @@ public class BaseAwaken
 }
 
 [Serializable]
-public class BaseSpeciality
-{
+public class BaseSpeciality {
     public int baseAttackMin;
     public int baseAttackMax;
 
@@ -201,8 +187,7 @@ public class BaseSpeciality
 }
 
 [Serializable]
-public class BaseRelic
-{
+public class BaseRelic {
     public float baseAttackAmp;
     public float baseHealthAmp;
     public float baseDefenceAmp;
@@ -218,8 +203,7 @@ public class BaseRelic
     public float baseExpEarnAmp;
 }
 
-public interface IBuffTarget
-{
+public interface IBuffTarget {
     public void AddBuffToList(TempBuffStatus tempBuff);
     public void RemoveBuffFromList(TempBuffStatus tempBuff);
 }

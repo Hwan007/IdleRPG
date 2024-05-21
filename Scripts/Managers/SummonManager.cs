@@ -7,8 +7,7 @@ using Keiwando.BigInteger;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class SummonManager : MonoBehaviour
-{
+public class SummonManager : MonoBehaviour {
     public static SummonManager instance;
     [field: SerializeField] public int diamondCostPerEquipSummon { get; private set; }
     [field: SerializeField] public int diamondCostPerSkillSummon { get; private set; }
@@ -22,11 +21,9 @@ public class SummonManager : MonoBehaviour
 
     [field: SerializeField] public EquipSummonGacha[] weaponGachaPerLevel { get; private set; }
 
-    public int WeaponSummonLevel
-    {
+    public int WeaponSummonLevel {
         get => weaponSummonLevel;
-        private set
-        {
+        private set {
             if (weaponSummonLevel < value)
                 onWeaponSummonLevelUP?.Invoke(value);
             weaponSummonLevel = value;
@@ -52,11 +49,9 @@ public class SummonManager : MonoBehaviour
 
     [field: SerializeField] public EquipSummonGacha[] armorGachaPerLevel { get; private set; }
 
-    public int ArmorSummonLevel
-    {
+    public int ArmorSummonLevel {
         get => armorSummonLevel;
-        private set
-        {
+        private set {
             if (armorSummonLevel < value)
                 onArmorSummonLevelUP?.Invoke(value);
             armorSummonLevel = value;
@@ -84,11 +79,9 @@ public class SummonManager : MonoBehaviour
 
     [field: SerializeField] public SkillSummonGacha skillGacha { get; private set; }
 
-    public int SkillSummonLevel
-    {
+    public int SkillSummonLevel {
         get => skillSummonLevel;
-        private set
-        {
+        private set {
             if (skillSummonLevel < value)
                 onSkillSummonLevelUP?.Invoke(value);
             skillSummonLevel = value;
@@ -111,23 +104,19 @@ public class SummonManager : MonoBehaviour
 
     #endregion
 
-    private void Awake()
-    {
+    private void Awake() {
         instance = this;
     }
 
-    public void InitSummonManager()
-    {
+    public void InitSummonManager() {
         LoadSummonLevel();
     }
 
-    public void StartSummonItems(EEquipmentType type, int amount, ECurrencyType currencyType, int cost)
-    {
+    public void StartSummonItems(EEquipmentType type, int amount, ECurrencyType currencyType, int cost) {
         StartCoroutine(SummonItems(type, amount, currencyType, cost));
     }
 
-    private IEnumerator SummonItems(EEquipmentType type, int amount, ECurrencyType currencyType, int cost)
-    {
+    private IEnumerator SummonItems(EEquipmentType type, int amount, ECurrencyType currencyType, int cost) {
         var status = PlayerManager.instance.status;
         var score = new BigInteger(status.BattleScore.ToString());
         List<SummonItem> list = new List<SummonItem>();
@@ -136,8 +125,7 @@ public class SummonManager : MonoBehaviour
         bool needSaveLevel = false;
         EquipSummonGacha gacha = null;
 
-        switch (type)
-        {
+        switch (type) {
             case EEquipmentType.Weapon:
                 needSaveLevel = WeaponSummonCountUpdate(amount);
                 gacha = weaponGachaPerLevel[WeaponSummonLevel];
@@ -150,20 +138,16 @@ public class SummonManager : MonoBehaviour
                 gacha = weaponGachaPerLevel[0];
                 break;
         }
-        
+
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < amount; ++i)
-        {
+        for (int i = 0; i < amount; ++i) {
             Equipment item = EquipmentManager.TryGetEquipment(sb.Clear().Append(type.ToString()).Append("_").Append(gacha.Summon()).ToString());//$"{type}_" + weaponGachaPerLevel[WeaponSummonLevel].Summon());
-            // Debug.Log(sb.ToString());
-            if (!ReferenceEquals(item, null))
-            {
+            if (!ReferenceEquals(item, null)) {
                 list.Add(new SummonItem(item));
 
                 if (item.rarity < ERarity.Mythology && Random.Range(0f, 1f) < shakeProbability)
                     upgradeIndex.AddLast(i);
-                else
-                {
+                else {
                     ++item.Quantity;
                     updateItems.Add(item);
                 }
@@ -177,14 +161,11 @@ public class SummonManager : MonoBehaviour
         while (!uiSummonPanel.IsEndShowSummon)
             yield return null;
 
-        while (upgradeIndex.Count > 0)
-        {
+        while (upgradeIndex.Count > 0) {
             LinkedListNode<int> upIndex = upgradeIndex.First;
             int count = upgradeIndex.Count;
-            while (!ReferenceEquals(upIndex, null))
-            {
-                if (list[upIndex.Value].item.rarity == ERarity.Mythology)
-                {
+            while (!ReferenceEquals(upIndex, null)) {
+                if (list[upIndex.Value].item.rarity == ERarity.Mythology) {
                     ++list[upIndex.Value].item.Quantity;
                     updateItems.Add(list[upIndex.Value].item);
                     var del = upIndex;
@@ -194,17 +175,14 @@ public class SummonManager : MonoBehaviour
                     continue;
                 }
 
-                if (Random.Range(0f, 1f) < shakeProbability)
-                {
+                if (Random.Range(0f, 1f) < shakeProbability) {
                     list[upIndex.Value].IsUpgrade(true, EquipmentManager.instance.TryGetEquipment(
                             list[upIndex.Value].item.type,
-                            4 * ((int)list[upIndex.Value].item.rarity + 1) + list[upIndex.Value].item.level - 1),
+                            4 * ((int)list[upIndex.Value].item.rarity + 1) + list[upIndex.Value].item.rarityLevel - 1),
                         () => --count);
                     upIndex = upIndex.Next;
-                    // list[target.Value].onUpgrade = EquipmentManager.instance.TryGetEquipment(target.Value.type, 4 * ((int)target.Value.rarity + 1) + target.Value.level - 1);
                 }
-                else
-                {
+                else {
                     ++list[upIndex.Value].item.Quantity;
                     updateItems.Add(list[upIndex.Value].item);
 
@@ -215,7 +193,6 @@ public class SummonManager : MonoBehaviour
                 }
             }
 
-            // TODO wait until shake is finished
             while (count > 0)
                 yield return null;
             yield return null;
@@ -225,11 +202,8 @@ public class SummonManager : MonoBehaviour
 
         yield return null;
 
-        foreach (var item in updateItems)
-        {
-            // item.SetQuantityUI();
-            if (!item.IsOwned)
-            {
+        foreach (var item in updateItems) {
+            if (!item.IsOwned) {
                 item.IsOwned = true;
                 item.Save(ESaveType.IsOwned);
                 PlayerManager.instance.ApplyOwnedEffect(item);
@@ -251,29 +225,24 @@ public class SummonManager : MonoBehaviour
         yield return null;
     }
 
-    public void StartSummonSkills(int amount, int cost)
-    {
+    public void StartSummonSkills(int amount, int cost) {
         StartCoroutine(SummonSkills(amount, cost));
     }
 
-    private IEnumerator SummonSkills(int amount, int cost)
-    {
+    private IEnumerator SummonSkills(int amount, int cost) {
         List<SummonSkill> list = new List<SummonSkill>();
         LinkedList<int> upgradeIndex = new LinkedList<int>();
         HashSet<BaseSkillData> updateSkill = new HashSet<BaseSkillData>();
         bool needSaveLevel = false;
 
-        for (int i = 0; i < amount; ++i)
-        {
+        for (int i = 0; i < amount; ++i) {
             BaseSkillData skill = skillGacha.Summon();
-            if (!ReferenceEquals(skill, null))
-            {
+            if (!ReferenceEquals(skill, null)) {
                 list.Add(new SummonSkill(skill));
 
                 if (skill.rarity < ERarity.Mythology && Random.Range(0f, 1f) < shakeProbability)
                     upgradeIndex.AddLast(i);
-                else
-                {
+                else {
                     ++skill.quantity;
                     updateSkill.Add(skill);
                 }
@@ -287,20 +256,16 @@ public class SummonManager : MonoBehaviour
         while (!uiSummonPanel.IsEndShowSummon)
             yield return null;
 
-        while (upgradeIndex.Count > 0)
-        {
+        while (upgradeIndex.Count > 0) {
             LinkedListNode<int> upIndex = upgradeIndex.First;
             int count = upgradeIndex.Count;
-            while (!ReferenceEquals(upIndex, null))
-            {
-                if (Random.Range(0f, 1f) < shakeProbability)
-                {
+            while (!ReferenceEquals(upIndex, null)) {
+                if (Random.Range(0f, 1f) < shakeProbability) {
                     list[upIndex.Value].IsUpgrade(true, SummonSkillsInRarity(list[upIndex.Value].skill.rarity + 1),
                         () => --count);
                     upIndex = upIndex.Next;
                 }
-                else
-                {
+                else {
                     ++list[upIndex.Value].skill.quantity;
                     updateSkill.Add(list[upIndex.Value].skill);
 
@@ -317,11 +282,8 @@ public class SummonManager : MonoBehaviour
             yield return null;
         }
 
-        foreach (var item in updateSkill)
-        {
-            // item.SetQuantityUI();
-            if (!item.isOwned)
-            {
+        foreach (var item in updateSkill) {
+            if (!item.isOwned) {
                 item.isOwned = true;
                 item.Save(ESkillDataType.IsOwned);
                 if (item is PassiveSkillData passive)
@@ -344,120 +306,7 @@ public class SummonManager : MonoBehaviour
         yield return null;
     }
 
-
-    /// <summary>
-    /// 해당 타입의 아이템을 개수만큼 리스트에 추가하여 돌려줍니다.
-    /// </summary>
-    /// <param name="type">장비 타입</param>
-    /// <param name="amount">소환 개수</param>
-    /// <returns>소환된 아이템 리스트</returns>
-    // public bool TrySummonItems(EEquipmentType type, int amount, ECurrencyType currencyType, out List<Equipment> list)
-    // {
-    //     // TODO
-    //     // check cost and return true/false to try summon
-    //     list = new List<Equipment>();
-    //     HashSet<Equipment> updateItems = new HashSet<Equipment>();
-    //     bool needSaveLevel = false;
-    //     int cost = 0;
-    //     switch (type)
-    //     {
-    //         case EEquipmentType.Weapon:
-    //             needSaveLevel = WeaponSummonCountUpdate(amount);
-    //             switch (currencyType)
-    //             {
-    //                 case ECurrencyType.Dia:
-    //                     cost = amount * diamondCostPerEquipSummon;
-    //                     break;
-    //                 case ECurrencyType.WeaponSummonTicket:
-    //                     cost = amount;
-    //                     break;
-    //                 default:
-    //                     throw new ArgumentOutOfRangeException(nameof(currencyType), currencyType, null);
-    //             }
-    //             while (amount > 0)
-    //             {
-    //                 Equipment item =
-    //                     EquipmentManager.GetEquipment($"{type}_" + weaponGachaPerLevel[WeaponSummonLevel].Summon());
-    //                 ++item.Quantity;
-    //                 updateItems.Add(item);
-    //                 list.Add(item);
-    //                 --amount;
-    //             }
-    //             break;
-    //         case EEquipmentType.Armor:
-    //             needSaveLevel = ArmorSummonCountUpdate(amount);
-    //             switch (currencyType)
-    //             {
-    //                 case ECurrencyType.Dia:
-    //                     cost = amount * diamondCostPerEquipSummon;
-    //                     break;
-    //                 case ECurrencyType.ArmorSummonTicket:
-    //                     cost = amount;
-    //                     break;
-    //                 default:
-    //                     throw new ArgumentOutOfRangeException(nameof(currencyType), currencyType, null);
-    //             }
-    //             while (amount > 0)
-    //             {
-    //                 Equipment item =
-    //                     EquipmentManager.GetEquipment($"{type}_" + armorGachaPerLevel[ArmorSummonLevel].Summon());
-    //                 list.Add(item);
-    //                 ++item.Quantity;
-    //                 updateItems.Add(item);
-    //                 --amount;
-    //             }
-    //             break;
-    //     }
-    //
-    //     foreach (var item in updateItems)
-    //     {
-    //         // item.SetQuantityUI();
-    //         item.IsOwned = true;
-    //         item.SaveQuantity();
-    //     }
-    //     CurrencyManager.instance.SubtractCurrency(currencyType, cost)
-    //
-    //     SaveSummonCount(type);
-    //     if (needSaveLevel)
-    //         SaveSummonLevel(type);
-    //     CurrencyManager.instance.SaveCurrencies();
-    //     return true;
-    // }
-    //
-    // public bool SummonSkills(int amount, out List<BaseSkillData> list)
-    // {
-    //     bool needSaveLevel = false;
-    //     list = new List<BaseSkillData>();
-    //     HashSet<BaseSkillData> updateItems = new HashSet<BaseSkillData>();
-    //     int summonAmount = amount;
-    //     
-    //     while (amount > 0)
-    //     {
-    //         // TODO
-    //         BaseSkillData skill = skillGacha.Summon();
-    //         ++skill.quantity;
-    //         list.Add(skill);
-    //         updateItems.Add(skill);
-    //         --amount;
-    //     }
-    //     needSaveLevel = SkillSummonCountUpdate(summonAmount);
-    //     
-    //     foreach (var item in updateItems)
-    //     {
-    //         item.isOwned = true;
-    //         item.SaveQuantity();
-    //     }
-    //
-    //     if (!CurrencyManager.instance.SubtractCurrency(ECurrencyType.Dia, summonAmount * diamondCostPerSkillSummon))
-    //         return false;
-    //
-    //     SaveSummonCount(EEquipmentType.Skill);
-    //     if (needSaveLevel)
-    //         SaveSummonLevel(EEquipmentType.Skill);
-    //     return true;
-    // }
-    public bool CalculateCost(EEquipmentType type, int amount, out int costDia, out int costTicket)
-    {
+    public bool CalculateCost(EEquipmentType type, int amount, out int costDia, out int costTicket) {
         ECurrencyType ticket;
         if (type == EEquipmentType.Weapon)
             ticket = ECurrencyType.WeaponSummonTicket;
@@ -469,16 +318,13 @@ public class SummonManager : MonoBehaviour
         var ownedTicket = CurrencyManager.instance.GetCurrency(ticket);
 
         int compareTicket = ownedTicket.CompareTo(amount);
-        if (compareTicket >= 0) // 티켓이 많거나 같음
-        {
+        if (compareTicket >= 0) {
             costTicket = amount;
             costDia = 0;
         }
-        else // 티켓이 적음
-        {
+        else {
             costTicket = 0;
-            switch (type)
-            {
+            switch (type) {
                 case EEquipmentType.Weapon:
                 case EEquipmentType.Armor:
                     costDia = amount * diamondCostPerEquipSummon;
@@ -498,10 +344,8 @@ public class SummonManager : MonoBehaviour
         return true;
     }
 
-    public void SaveSummonLevel(EEquipmentType type)
-    {
-        switch (type)
-        {
+    public void SaveSummonLevel(EEquipmentType type) {
+        switch (type) {
             case EEquipmentType.Weapon:
                 DataManager.Instance.Save<int>($"{nameof(WeaponSummonLevel)}", WeaponSummonLevel);
                 break;
@@ -514,10 +358,8 @@ public class SummonManager : MonoBehaviour
         }
     }
 
-    public void SaveSummonCount(EEquipmentType type)
-    {
-        switch (type)
-        {
+    public void SaveSummonCount(EEquipmentType type) {
+        switch (type) {
             case EEquipmentType.Weapon:
                 DataManager.Instance.Save<int>($"{nameof(WeaponSummonCount)}", WeaponSummonCount);
                 break;
@@ -530,8 +372,7 @@ public class SummonManager : MonoBehaviour
         }
     }
 
-    public void LoadSummonLevel()
-    {
+    public void LoadSummonLevel() {
         weaponSummonLevel = DataManager.Instance.Load<int>($"{nameof(WeaponSummonLevel)}", 0);
         weaponSummonCount = DataManager.Instance.Load<int>($"{nameof(WeaponSummonCount)}", 0);
         weaponRewardLevel = DataManager.Instance.Load<int>($"Summon_{nameof(weaponRewardLevel)}", 0);
@@ -543,40 +384,33 @@ public class SummonManager : MonoBehaviour
         skillRewardLevel = DataManager.Instance.Load<int>($"Summon_{nameof(skillRewardLevel)}", 0);
 
         totalWeaponSummonCount = new BigInteger(weaponSummonCount);
-        for (int i = 0; i < weaponSummonLevel - 1; ++i)
-        {
+        for (int i = 0; i < weaponSummonLevel - 1; ++i) {
             totalWeaponSummonCount += SummonCountPerLevel[i];
         }
 
         totalArmorSummonCount = new BigInteger(armorSummonCount);
-        for (int i = 0; i < armorSummonLevel - 1; ++i)
-        {
+        for (int i = 0; i < armorSummonLevel - 1; ++i) {
             totalArmorSummonCount += SummonCountPerLevel[i];
         }
 
         totalSkillSummonCount = new BigInteger(skillSummonCount);
-        for (int i = 0; i < skillSummonLevel - 1; ++i)
-        {
+        for (int i = 0; i < skillSummonLevel - 1; ++i) {
             totalSkillSummonCount += SummonCountPerLevel[i];
         }
     }
 
-    public BaseSkillData SummonSkillsInRarity(ERarity skillRarity)
-    {
+    public BaseSkillData SummonSkillsInRarity(ERarity skillRarity) {
         var skills = SkillManager.instance.GetSkillsOnRarity(skillRarity);
         var index = Random.Range(0, skills.Count);
-        // Debug.Log($"{skillRarity.ToString()} {index}/{skills.Count}");
         return skills[index];
     }
 
 
-    private bool WeaponSummonCountUpdate(int amount)
-    {
+    private bool WeaponSummonCountUpdate(int amount) {
         bool ret = false;
         totalWeaponSummonCount += amount;
         weaponSummonCount += amount;
-        while (weaponSummonCount >= SummonCountPerLevel[WeaponSummonLevel])
-        {
+        while (weaponSummonCount >= SummonCountPerLevel[WeaponSummonLevel]) {
             if (WeaponSummonLevel >= SummonCountPerLevel.Length - 1)
                 break;
             weaponSummonCount -= SummonCountPerLevel[WeaponSummonLevel];
@@ -589,13 +423,11 @@ public class SummonManager : MonoBehaviour
         return ret;
     }
 
-    private bool ArmorSummonCountUpdate(int amount)
-    {
+    private bool ArmorSummonCountUpdate(int amount) {
         bool ret = false;
         totalArmorSummonCount += amount;
         armorSummonCount += amount;
-        while (armorSummonCount >= SummonCountPerLevel[ArmorSummonLevel])
-        {
+        while (armorSummonCount >= SummonCountPerLevel[ArmorSummonLevel]) {
             if (ArmorSummonLevel >= SummonCountPerLevel.Length - 1)
                 break;
             armorSummonCount -= SummonCountPerLevel[ArmorSummonLevel];
@@ -608,13 +440,11 @@ public class SummonManager : MonoBehaviour
         return ret;
     }
 
-    private bool SkillSummonCountUpdate(int amount)
-    {
+    private bool SkillSummonCountUpdate(int amount) {
         bool ret = false;
         totalSkillSummonCount += amount;
         skillSummonCount += amount;
-        while (skillSummonCount >= 400)
-        {
+        while (skillSummonCount >= 400) {
             skillSummonCount -= 400;
             ++SkillSummonLevel;
             ret = true;
@@ -625,13 +455,10 @@ public class SummonManager : MonoBehaviour
         return ret;
     }
 
-    public bool TryGetSummonReward(EEquipmentType type, int summonLevel, out SummonReward rewardData)
-    {
-        switch (type)
-        {
+    public bool TryGetSummonReward(EEquipmentType type, int summonLevel, out SummonReward rewardData) {
+        switch (type) {
             case EEquipmentType.Weapon:
-                if (weaponRewardLevel < summonLevel)
-                {
+                if (weaponRewardLevel < summonLevel) {
                     rewardData = weaponReward[weaponRewardLevel];
                     ++weaponRewardLevel;
                     DataManager.Instance.Save($"Summon_{nameof(weaponRewardLevel)}", weaponRewardLevel);
@@ -639,8 +466,7 @@ public class SummonManager : MonoBehaviour
                 }
                 break;
             case EEquipmentType.Armor:
-                if (armorRewardLevel < summonLevel)
-                {
+                if (armorRewardLevel < summonLevel) {
                     rewardData = armorReward[armorRewardLevel];
                     ++armorRewardLevel;
                     DataManager.Instance.Save($"Summon_{nameof(armorRewardLevel)}", armorRewardLevel);
@@ -648,8 +474,7 @@ public class SummonManager : MonoBehaviour
                 }
                 break;
             case EEquipmentType.Skill:
-                if (skillRewardLevel < summonLevel)
-                {
+                if (skillRewardLevel < summonLevel) {
                     rewardData = skillReward;
                     ++skillRewardLevel;
                     DataManager.Instance.Save($"Summon_{nameof(skillRewardLevel)}", skillRewardLevel);
@@ -663,36 +488,30 @@ public class SummonManager : MonoBehaviour
     }
 }
 
-public class SummonItem
-{
+public class SummonItem {
     public Equipment item;
     public event Action<bool, Equipment, Action> isUpgrade;
 
-    public SummonItem(Equipment equipment)
-    {
+    public SummonItem(Equipment equipment) {
         item = equipment;
     }
 
-    public void IsUpgrade(bool isUpgrade, Equipment to = null, Action end = null)
-    {
+    public void IsUpgrade(bool isUpgrade, Equipment to = null, Action end = null) {
         this.isUpgrade?.Invoke(isUpgrade, to, end);
         if (isUpgrade)
             item = to;
     }
 }
 
-public class SummonSkill
-{
+public class SummonSkill {
     public BaseSkillData skill;
     public event Action<bool, BaseSkillData, Action> isUpgrade;
 
-    public SummonSkill(BaseSkillData skillData)
-    {
+    public SummonSkill(BaseSkillData skillData) {
         skill = skillData;
     }
 
-    public void IsUpgrade(bool isUpgrade, BaseSkillData to = null, Action end = null)
-    {
+    public void IsUpgrade(bool isUpgrade, BaseSkillData to = null, Action end = null) {
         this.isUpgrade?.Invoke(isUpgrade, to, end);
         if (isUpgrade)
             skill = to;
@@ -700,8 +519,7 @@ public class SummonSkill
 }
 
 [Serializable]
-public class SummonReward
-{
+public class SummonReward {
     public ECurrencyType type;
     public int amount;
 }
