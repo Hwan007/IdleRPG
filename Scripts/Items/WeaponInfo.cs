@@ -70,7 +70,7 @@ public class WeaponInfo : Equipment {
         requiredEnhanceStone += (BigInteger)(baseEnhanceStoneIncrease) * enhancementLevel;
     }
 
-    public override bool Enhance() {
+    public override bool TryEnhance(int maxlevel) {
         equippedEffect += baseEquippedEffect;
         ownedEffect += baseOwnedEffect;
 
@@ -120,6 +120,10 @@ public class WeaponInfo : Equipment {
         equippedEffect = new BigInteger(DataManager.Instance.Load<string>($"{nameof(equippedEffect)}_{equipName}", baseEquippedEffect.ToString()));
         ownedEffect = new BigInteger(DataManager.Instance.Load<string>($"{nameof(ownedEffect)}_{equipName}", baseOwnedEffect.ToString()));
         requiredEnhanceStone = new BigInteger(DataManager.Instance.Load<string>($"{nameof(requiredEnhanceStone)}_{equipName}", baseEnhanceStoneRequired.ToString()));
+    }
+
+    public override bool CanEnhance(int maxlevel) {
+        return enhancementLevel >= maxlevel;
     }
 
     public override BigInteger GetValue() {

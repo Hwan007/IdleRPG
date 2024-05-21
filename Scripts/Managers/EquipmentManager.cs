@@ -305,28 +305,6 @@ public class EquipmentManager : MonoBehaviour {
         return null;
     }
 
-    public static void SetEquipment<T>(string equipmentName, T equipment) where T : Equipment {
-        Equipment targetEquipment = allEquipment[equipmentName];
-        targetEquipment.Quantity = equipment.Quantity;
-
-        switch (targetEquipment, equipment) {
-            case (WeaponInfo fromInfo, WeaponInfo toInfo):
-                fromInfo.equippedEffect = toInfo.equippedEffect;
-                fromInfo.ownedEffect = toInfo.ownedEffect;
-                fromInfo.enhancementLevel = toInfo.enhancementLevel;
-                break;
-            case (ArmorInfo fromInfo, ArmorInfo toInfo):
-                fromInfo.equippedEffect = toInfo.equippedEffect;
-                fromInfo.ownedEffect = toInfo.ownedEffect;
-                fromInfo.enhancementLevel = toInfo.enhancementLevel;
-                break;
-            default:
-                break;
-        }
-
-        targetEquipment.SaveEquipment();
-    }
-
     public Equipment TryGetNextEquipment(string currentKey) {
         int currentRarityIndex = -1;
         string currentTypeStr = "";
@@ -391,22 +369,19 @@ public class EquipmentManager : MonoBehaviour {
             }
         }
 
-        Equipment item;
+        Equipment item = null;
         switch (selectItemType) {
             case EEquipmentType.Weapon:
-                item = GetBestItem<WeaponInfo>(weapons);
-                if (!ReferenceEquals(item, null)) {
-                    PlayerManager.instance.EquipItem(item, true);
-                    item.Save(ESaveType.IsEquipped);
-                }
+                item = GetBestItem(weapons);
                 break;
             case EEquipmentType.Armor:
-                item = GetBestItem<ArmorInfo>(armors);
-                if (!ReferenceEquals(item, null)) {
-                    PlayerManager.instance.EquipItem(item, true);
-                    item.Save(ESaveType.IsEquipped);
-                }
+                item = GetBestItem(armors);
                 break;
+        }
+
+        if (!ReferenceEquals(item, null)) {
+            PlayerManager.instance.EquipItem(item, true);
+            item.Save(ESaveType.IsEquipped);
         }
     }
 
@@ -461,18 +436,13 @@ public class EquipmentManager : MonoBehaviour {
 
     public void Enhance<T>(T item) where T : Equipment {
         CurrencyManager.instance.SubtractCurrency(ECurrencyType.EnhanceStone, item.GetEnhanceStone());
-        if (item.Enhance())
+        if (item.TryEnhance(EnhancementMaxLevel))
             ++TotalEnhanceCount;
     }
 
     public sbyte CanEnhance<T>(T item) where T : Equipment {
-        if (item is WeaponInfo weaponInfo && weaponInfo.enhancementLevel >= EnhancementMaxLevel) {
+        if (!item.CanEnhance(EnhancementMaxLevel))
             return -1;
-        }
-        else if (item is ArmorInfo armorinfo && armorinfo.enhancementLevel >= EnhancementMaxLevel) {
-            return -1;
-        }
-
         if (CurrencyManager.instance.GetCurrency(ECurrencyType.EnhanceStone) > item.GetEnhanceStone())
             return 1;
         return 0;

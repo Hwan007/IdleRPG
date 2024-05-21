@@ -65,7 +65,11 @@ public class Equipment {
     public Equipment() {
     }
 
-    public virtual bool Enhance() {
+    public virtual bool CanEnhance(int maxlevel) {
+        return false;
+    }
+
+    public virtual bool TryEnhance(int maxlevel) {
         return false;
     }
 
