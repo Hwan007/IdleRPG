@@ -154,7 +154,7 @@ public class EquipmentManager : MonoBehaviour {
             }
         }
     }
-
+#if UNITY_EDITOR
     public void CreateAllWeapon() {
         foreach (ERarity rarity in rarities) {
             if (rarity == ERarity.None)
@@ -197,15 +197,43 @@ public class EquipmentManager : MonoBehaviour {
             }
         }
     }
+#endif
     #endregion
-    public int Composite(Equipment equipment) {
-        if (equipment.Quantity < 4)
+
+    T GetBestItem<T>(List<T> items) where T : Equipment {
+        T best = null;
+        foreach (var item in items) {
+            if (!item.IsOwned)
+                continue;
+            if (ReferenceEquals(best, null)) {
+                best = item;
+                continue;
+            }
+            if (best < item) {
+                best = item;
+            }
+        }
+        return best;
+    }
+
+    public Equipment TryGetBestItem(EEquipmentType type) {
+        switch (type) {
+            case EEquipmentType.Weapon:
+                return GetBestItem(weapons);
+            case EEquipmentType.Armor:
+                return GetBestItem(armors);
+            default:
+                return null;
+        }
+    }
+
+    public int Composite<T>(T equipment) where T : Equipment, ICompositable {
+        if (equipment.CanComposite())
             return -1;
         Equipment nextEquipment = TryGetNextEquipment(equipment.equipName);
         if (nextEquipment == null)
             return -1;
-        int compositeCount = equipment.Quantity / 4;
-        equipment.Quantity %= 4;
+        int compositeCount = equipment.Composite();
         if (!nextEquipment.IsOwned) {
             nextEquipment.IsOwned = true;
             nextEquipment.Save(ESaveType.IsOwned);
@@ -215,12 +243,12 @@ public class EquipmentManager : MonoBehaviour {
         return compositeCount;
     }
 
-    public void CompositeOnce(Equipment equipment) {
+    public void CompositeOnce<T>(T equipment) where T : Equipment, ICompositable {
         var status = PlayerManager.instance.status;
         var score = new BigInteger(status.BattleScore.ToString());
         if (Composite(equipment) > 0) {
             equipment.Save(ESaveType.Quantity);
-            TryGetNextEquipment(equipment.equipName).Save(ESaveType.Quantity);
+            TryGetNextEquipment(equipment.equipName)?.Save(ESaveType.Quantity);
         }
 
         if (equipment.type == EEquipmentType.Weapon) {
@@ -252,7 +280,7 @@ public class EquipmentManager : MonoBehaviour {
         MessageUIManager.instance.ShowPower(status.BattleScore, status.BattleScore - score);
     }
 
-    private void CompositeAllItems<T>(List<T> items) where T : Equipment {
+    private void CompositeAllItems<T>(List<T> items) where T : Equipment, ICompositable {
         int count = 0;
         HashSet<T> updateItems = new HashSet<T>();
         foreach (var item in items) {
@@ -262,7 +290,8 @@ public class EquipmentManager : MonoBehaviour {
             count += ret;
             updateItems.Add(item);
             var nextItem = TryGetNextEquipment(item.equipName);
-            updateItems.Add(nextItem as T);
+            if (!ReferenceEquals(nextItem, null))
+                updateItems.Add(nextItem as T);
         }
         foreach (var item in updateItems) {
             item.Save(ESaveType.Quantity);
@@ -385,33 +414,6 @@ public class EquipmentManager : MonoBehaviour {
         }
     }
 
-    T GetBestItem<T>(List<T> items) where T : Equipment {
-        T best = null;
-        foreach (var item in items) {
-            if (!item.IsOwned)
-                continue;
-            if (ReferenceEquals(best, null)) {
-                best = item;
-                continue;
-            }
-            if (best < item) {
-                best = item;
-            }
-        }
-        return best;
-    }
-
-    public Equipment TryGetBestItem(EEquipmentType type) {
-        switch (type) {
-            case EEquipmentType.Weapon:
-                return GetBestItem(weapons);
-            case EEquipmentType.Armor:
-                return GetBestItem(armors);
-            default:
-                return null;
-        }
-    }
-
     public Sprite GetFrame(ERarity rarity) {
         return rarityFrame[(int)rarity];
     }
@@ -426,21 +428,21 @@ public class EquipmentManager : MonoBehaviour {
         return false;
     }
 
-    private bool CanComposite<T>(List<T> items) where T : Equipment {
+    private bool CanComposite<T>(List<T> items) where T : Equipment, ICompositable {
         foreach (var item in items) {
-            if (item.Quantity >= 4)
+            if (item.CanComposite())
                 return true;
         }
         return false;
     }
 
-    public void Enhance<T>(T item) where T : Equipment {
+    public void Enhance(IEnhanceable item) {
         CurrencyManager.instance.SubtractCurrency(ECurrencyType.EnhanceStone, item.GetEnhanceStone());
         if (item.TryEnhance(EnhancementMaxLevel))
             ++TotalEnhanceCount;
     }
 
-    public sbyte CanEnhance<T>(T item) where T : Equipment {
+    public sbyte CanEnhance(IEnhanceable item) {
         if (!item.CanEnhance(EnhancementMaxLevel))
             return -1;
         if (CurrencyManager.instance.GetCurrency(ECurrencyType.EnhanceStone) > item.GetEnhanceStone())

@@ -4,7 +4,8 @@ using Keiwando.BigInteger;
 using UnityEngine;
 
 [Serializable]
-public class WeaponInfo : Equipment {
+public class WeaponInfo : Equipment, IEnhanceable, ICompositable, IAwakenable {
+    #region 필드 및 생성자
     public int enhancementLevel;
     public int baseEquippedEffect;
     public BigInteger equippedEffect;
@@ -20,8 +21,7 @@ public class WeaponInfo : Equipment {
     public WeaponInfo(string equipName, int quantity, int level, bool isEquipped, EEquipmentType type, ERarity rarity,
         int enhancementLevel, int baseEquippedEffect, int baseOwnedEffect, int basicAwakenEffect,
         int baseEnhanceStoneRequired, int baseEnhanceStoneIncrease, bool isOwned = false, bool isAwaken = false) : base(
-        equipName, quantity, level, isEquipped, type, rarity, enhancementLevel, baseEquippedEffect, baseOwnedEffect,
-        basicAwakenEffect, baseEnhanceStoneRequired, baseEnhanceStoneIncrease, isOwned, isAwaken) {
+        equipName, quantity, level, isEquipped, type, rarity, isOwned) {
         this.enhancementLevel = enhancementLevel;
         this.baseEquippedEffect = baseEquippedEffect;
         this.baseOwnedEffect = baseOwnedEffect;
@@ -69,8 +69,8 @@ public class WeaponInfo : Equipment {
         requiredEnhanceStone = new BigInteger(baseEnhanceStoneRequired);
         requiredEnhanceStone += (BigInteger)(baseEnhanceStoneIncrease) * enhancementLevel;
     }
-
-    public override bool TryEnhance(int maxlevel) {
+    #endregion
+    public bool TryEnhance(int maxlevel) {
         equippedEffect += baseEquippedEffect;
         ownedEffect += baseOwnedEffect;
 
@@ -80,8 +80,22 @@ public class WeaponInfo : Equipment {
         return true;
     }
 
-    public override BigInteger GetEnhanceStone() {
+    public BigInteger GetEnhanceStone() {
         return requiredEnhanceStone;
+    }
+    public bool CanComposite() {
+        if (Quantity >= 4)
+            return true;
+        return false;
+    }
+    public bool CanEnhance(int maxlevel) {
+        return enhancementLevel >= maxlevel;
+    }
+
+    public int Composite() {
+        int compositeCount = Quantity / 4;
+        Quantity %= 4;
+        return compositeCount;
     }
 
     public override void SaveEquipment() {
@@ -122,11 +136,21 @@ public class WeaponInfo : Equipment {
         requiredEnhanceStone = new BigInteger(DataManager.Instance.Load<string>($"{nameof(requiredEnhanceStone)}_{equipName}", baseEnhanceStoneRequired.ToString()));
     }
 
-    public override bool CanEnhance(int maxlevel) {
-        return enhancementLevel >= maxlevel;
-    }
-
     public override BigInteger GetValue() {
         return equippedEffect;
+    }
+
+
+    public bool CanAwaken(int enhancementMaxLevel) {
+        if (isAwaken) return false;
+        if (enhancementLevel == enhancementMaxLevel)
+            return true;
+        return false;
+    }
+
+    public int Awaken() {
+        if (isAwaken) return 0;
+        isAwaken = true;
+        return basicAwakenEffect;
     }
 }

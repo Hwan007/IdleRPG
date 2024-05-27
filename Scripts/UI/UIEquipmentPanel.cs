@@ -161,20 +161,11 @@ public class UIEquipmentPanel : UIPanel {
         });
 
         enhanceBtn.onClick.AddListener(() => {
-            if (selectedTab == EEquipmentType.Weapon) {
-                var ret = EquipmentManager.instance.CanEnhance(selectedWeapon);
-                if (ret == 1)
-                    uiEnhancePopup.ShowUI(selectedWeapon);
-                else if (ret == -1)
-                    MessageUIManager.instance.ShowCenterMessage("강화할 수 없습니다.");
-            }
-            else if (selectedTab == EEquipmentType.Armor) {
-                var ret = EquipmentManager.instance.CanEnhance(selectedArmor);
-                if (ret == 1)
-                    uiEnhancePopup.ShowUI(selectedArmor);
-                else if (ret == -1)
-                    MessageUIManager.instance.ShowCenterMessage("강화할 수 없습니다.");
-            }
+            var ret = EquipmentManager.instance.CanEnhance(selectedWeapon);
+            if (ret == 1)
+                uiEnhancePopup.ShowUI(selectedWeapon);
+            else if (ret == -1)
+                MessageUIManager.instance.ShowCenterMessage("강화할 수 없습니다.");
 
             if (questGuide.gameObject.activeInHierarchy) {
                 questGuide.gameObject.SetActive(false);

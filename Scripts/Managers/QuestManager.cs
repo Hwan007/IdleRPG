@@ -4,7 +4,6 @@ using System.Linq;
 using Defines;
 using Keiwando.BigInteger;
 using UnityEngine;
-using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

@@ -6,6 +6,7 @@ using UnityEngine.Serialization;
 
 [Serializable]
 public class Equipment {
+    #region 필드 및 생성자
     public string equipName;
     public ERarity rarity;
     public int rarityLevel;
@@ -50,9 +51,7 @@ public class Equipment {
     public Action<bool> actOnEquipChange;
 
 
-    public Equipment(string equipName, int quantity, int rarityLevel, bool isEquipped, EEquipmentType type, ERarity rarity,
-        int enhancementLevel, int baseEquippedEffect, int baseOwnedEffect, int basicAwakenEffect,
-        int baseEnhanceStoneRequired, int baseEnhanceStoneIncrease, bool isOwned = false, bool isAwaken = false) {
+    public Equipment(string equipName, int quantity, int rarityLevel, bool isEquipped, EEquipmentType type, ERarity rarity, bool isOwned = false) {
         this.equipName = equipName;
         this.Quantity = quantity;
         this.rarityLevel = rarityLevel;
@@ -64,25 +63,23 @@ public class Equipment {
 
     public Equipment() {
     }
-
-    public virtual bool CanEnhance(int maxlevel) {
-        return false;
-    }
-
-    public virtual bool TryEnhance(int maxlevel) {
-        return false;
-    }
-
-    public virtual BigInteger GetEnhanceStone() {
+    #endregion
+    public virtual BigInteger GetValue() {
         return 0;
     }
 
-    public bool CheckQuantity() {
-        if (Quantity >= 4) {
+    public static bool operator <(Equipment a, Equipment b) {
+        if (a.GetValue() < b.GetValue())
             return true;
-        }
+        else
+            return false;
+    }
 
-        return false;
+    public static bool operator >(Equipment a, Equipment b) {
+        if (a.GetValue() > b.GetValue())
+            return true;
+        else
+            return false;
     }
 
     public virtual void SaveEquipment() {
@@ -115,21 +112,20 @@ public class Equipment {
             isOwned = true;
     }
 
-    public virtual BigInteger GetValue() {
-        return 0;
-    }
+}
 
-    public static bool operator <(Equipment a, Equipment b) {
-        if (a.GetValue() < b.GetValue())
-            return true;
-        else
-            return false;
-    }
+public interface IEnhanceable {
+    public bool TryEnhance(int maxlevel);
+    public bool CanEnhance(int maxlevel);
+    public BigInteger GetEnhanceStone();
+}
 
-    public static bool operator >(Equipment a, Equipment b) {
-        if (a.GetValue() > b.GetValue())
-            return true;
-        else
-            return false;
-    }
+public interface ICompositable {
+    public bool CanComposite();
+    public int Composite();
+}
+
+public interface IAwakenable {
+    public bool CanAwaken(int enhancementMaxLevel);
+    public int Awaken();
 }

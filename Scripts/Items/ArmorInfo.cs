@@ -2,9 +2,10 @@ using System;
 using Defines;
 using Keiwando.BigInteger;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 [Serializable]
-public class ArmorInfo : Equipment {
+public class ArmorInfo : Equipment, IEnhanceable, ICompositable, IAwakenable {
     public int enhancementLevel;
     public int baseEquippedEffect;
     public BigInteger equippedEffect;
@@ -20,8 +21,7 @@ public class ArmorInfo : Equipment {
     public ArmorInfo(string equipName, int quantity, int level, bool isEquipped, EEquipmentType type, ERarity rarity,
         int enhancementLevel, int baseEquippedEffect, int baseOwnedEffect, int basicAwakenEffect,
         int baseEnhanceStoneRequired, int baseEnhanceStoneIncrease, bool isOwned = false, bool isAwaken = false) : base(
-        equipName, quantity, level, isEquipped, type, rarity, enhancementLevel, baseEquippedEffect, baseOwnedEffect,
-        basicAwakenEffect, baseEnhanceStoneRequired, baseEnhanceStoneIncrease, isOwned, isAwaken) {
+        equipName, quantity, level, isEquipped, type, rarity, isOwned) {
         this.enhancementLevel = enhancementLevel;
         this.baseEquippedEffect = baseEquippedEffect;
         this.baseOwnedEffect = baseOwnedEffect;
@@ -70,7 +70,7 @@ public class ArmorInfo : Equipment {
         requiredEnhanceStone += (BigInteger)(baseEnhanceStoneIncrease) * enhancementLevel;
     }
 
-    public override bool TryEnhance(int maxlevel) {
+    public bool TryEnhance(int maxlevel) {
         equippedEffect += baseEquippedEffect;
         ownedEffect += baseOwnedEffect;
 
@@ -80,7 +80,7 @@ public class ArmorInfo : Equipment {
         return true;
     }
 
-    public override BigInteger GetEnhanceStone() {
+    public BigInteger GetEnhanceStone() {
         return requiredEnhanceStone;
     }
 
@@ -122,11 +122,35 @@ public class ArmorInfo : Equipment {
         requiredEnhanceStone = new BigInteger(DataManager.Instance.Load<string>($"{nameof(requiredEnhanceStone)}_{equipName}", baseEnhanceStoneRequired.ToString()));
     }
 
-    public override bool CanEnhance(int maxlevel) {
+    public bool CanEnhance(int maxlevel) {
         return enhancementLevel >= maxlevel;
     }
 
     public override BigInteger GetValue() {
         return equippedEffect;
+    }
+
+    public bool CanComposite() {
+        if (Quantity >= 4)
+            return true;
+        return false;
+    }
+
+    public int Composite() {
+        int compositeCount = Quantity / 4;
+        Quantity %= 4;
+        return compositeCount;
+    }
+
+    public bool CanAwaken(int enhancementMaxLevel) {
+        if (isAwaken) return false;
+        if (enhancementLevel == enhancementMaxLevel)
+            return true;
+        return false;
+    }
+
+    public int Awaken() {
+        isAwaken = true;
+        return basicAwakenEffect;
     }
 }
